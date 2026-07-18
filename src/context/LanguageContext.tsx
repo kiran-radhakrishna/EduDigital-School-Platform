@@ -1,18 +1,9 @@
-import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import en, { type Translations } from '../i18n/en'
 import de from '../i18n/de'
-
-export type Lang = 'en' | 'de'
+import { LanguageContext, type Lang } from './language-context'
 
 const translations: Record<Lang, Translations> = { en, de }
-
-interface LanguageContextValue {
-  lang: Lang
-  setLang: (lang: Lang) => void
-  t: Translations
-}
-
-export const LanguageContext = createContext<LanguageContextValue | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {

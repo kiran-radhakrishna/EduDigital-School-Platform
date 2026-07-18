@@ -1,14 +1,15 @@
 import { motion } from 'framer-motion'
 import { Award, Calendar, CalendarCheck, ClipboardList, Download, MessageSquare, ShieldCheck } from 'lucide-react'
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 
 import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
 import { StatCard } from '../../components/common/StatCard'
 import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 import type { Assignment, Grade } from '../../types'
 
-const childName = 'Emma Morgan'
 const teacherEmail = 'sarah.johnson@digitalschool.edu'
 
 const recentGrades: Grade[] = [
@@ -26,6 +27,16 @@ const upcomingAssignments: Assignment[] = [
   { id: 'upcoming-4', title: 'Scratch Game Enhancement', subject: 'Computer Science', dueDate: '2026-07-10', status: 'pending' },
 ]
 
+const weeklyWellbeingTrend = [
+  { day: 'Mon', score: 82 },
+  { day: 'Tue', score: 78 },
+  { day: 'Wed', score: 75 },
+  { day: 'Thu', score: 80 },
+  { day: 'Fri', score: 84 },
+  { day: 'Sat', score: 88 },
+  { day: 'Sun', score: 85 },
+]
+
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -36,8 +47,10 @@ const formatDate = (value: string) =>
 export default function ParentDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'parent')
+  const childName = currentUser.fullName
 
-  const parentFirstName = user?.name?.split(' ')[0] ?? 'Parent'
+  const parentFirstName = currentUser.firstName
 
   const handleContactTeacher = () => {
     window.location.href = `mailto:${teacherEmail}?subject=${encodeURIComponent(`Update about ${childName}`)}`
@@ -60,7 +73,7 @@ export default function ParentDashboard() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = 'emma-morgan-progress-report.txt'
+    link.download = `${childName.toLowerCase().replace(/\s+/g, '-')}-progress-report.txt`
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -133,6 +146,32 @@ export default function ParentDashboard() {
               </Badge>
             </div>
           ))}
+        </div>
+      </Card>
+
+      <Card title="Weekly Wellbeing Trend" subtitle="Only your child&apos;s wellbeing data">
+        <div className="space-y-4">
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={weeklyWellbeingTrend}>
+                <XAxis dataKey="day" />
+                <YAxis domain={[40, 100]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2.5} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <p className="rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300">
+              Mostly Happy
+            </p>
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+              Sometimes Stressed
+            </p>
+            <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+              Needs Attention
+            </p>
+          </div>
         </div>
       </Card>
 

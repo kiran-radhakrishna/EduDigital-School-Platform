@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/dashboard/Sidebar'
 import Topbar from '../components/dashboard/Topbar'
 import { useAuth } from '../hooks/useAuth'
+import { useWellbeing } from '../hooks/useWellbeing'
 
 const TITLE_MAP: Record<string, string> = {
   dashboard:              'Dashboard',
@@ -20,6 +21,7 @@ const TITLE_MAP: Record<string, string> = {
   'subject-assessment':   'Subject Assessment',
   'career-suggestions':   'Career Suggestions',
   'mental-health':        'Mental Health',
+  events:                 'Events',
   notifications:          'Notifications',
   profile:                'Profile',
   settings:               'Settings',
@@ -32,12 +34,17 @@ function getDashboardTitle(pathname: string): string {
 
 export default function DashboardLayout() {
   const { isAuthenticated } = useAuth()
+  const { shouldShowWellbeingCheck } = useWellbeing()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   if (!isAuthenticated) {
     return <Navigate replace to="/login" />
+  }
+
+  if (shouldShowWellbeingCheck) {
+    return <Navigate replace to="/wellbeing-check" />
   }
 
   const title = getDashboardTitle(location.pathname)

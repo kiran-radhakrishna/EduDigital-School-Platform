@@ -1,11 +1,5 @@
-import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-
-interface ThemeContextValue {
-  isDark: boolean
-  toggleTheme: () => void
-}
-
-export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ThemeContext } from './theme-context'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState<boolean>(() => {

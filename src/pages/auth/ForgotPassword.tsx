@@ -106,7 +106,7 @@ export default function ForgotPassword() {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
-  const onSubmit = async (_data: ForgotPasswordFormData) => {
+  const onSubmit = async () => {
     await new Promise((resolve) => setTimeout(resolve, 800))
     setSubmitted(true)
   }

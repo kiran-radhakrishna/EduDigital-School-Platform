@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { Heart, Smile } from 'lucide-react'
 import clsx from 'clsx'
 import { MOTIVATIONAL_QUOTES } from '../../data/studentData'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } }
 const item: Variants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } }
@@ -33,13 +35,17 @@ const TIPS = [
   { emoji: '🤸', tip: 'Stretch for 5 minutes between study sessions to reduce tension.' },
 ]
 
+const QUOTE_INDEX_AT_LOAD = Math.floor(Date.now() / 1000) % MOTIVATIONAL_QUOTES.length
+
 export default function MentalHealth() {
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
   const [mood, setMood] = useState<Mood | null>(null)
   const [breathing, setBreathing] = useState(false)
   const [breathStep, setBreathStep] = useState(0)
 
   const selectedMood = MOODS.find((m) => m.key === mood)
-  const quote = MOTIVATIONAL_QUOTES[Math.floor(Date.now() / 1000) % MOTIVATIONAL_QUOTES.length]
+  const quote = MOTIVATIONAL_QUOTES[QUOTE_INDEX_AT_LOAD]
 
   const startBreathing = () => {
     setBreathing(true)
@@ -55,7 +61,9 @@ export default function MentalHealth() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mental Health</h1>
-          <p className="text-sm text-gray-500">Take care of your wellbeing, Emma 💖</p>
+          <p className="text-sm text-gray-500">
+            Take care of your wellbeing, {currentUser.firstName} 💖
+          </p>
         </div>
       </motion.div>
 
@@ -74,7 +82,11 @@ export default function MentalHealth() {
                   ? `ring-offset-2 ${bg}`
                   : 'bg-gray-50 ring-transparent hover:bg-gray-100 dark:bg-gray-800',
               )}
-              style={{ ringColor: mood === key ? color : undefined }}
+              style={
+                mood === key
+                  ? ({ '--tw-ring-color': color } as CSSProperties)
+                  : undefined
+              }
             >
               <span className="text-3xl">{emoji}</span>
               <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{label}</span>

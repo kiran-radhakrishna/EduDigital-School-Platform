@@ -140,7 +140,11 @@ export default function Login() {
     try {
       await login(data.email, data.password, selectedRole)
       toast.success('Welcome back!')
-      navigate(`/${selectedRole}/dashboard`)
+      if (selectedRole === 'admin') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/wellbeing-check')
+      }
     } catch {
       toast.error('Login failed. Please try again.')
     }

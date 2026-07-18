@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { Bot, Send, Sparkles } from 'lucide-react'
 import clsx from 'clsx'
-import { AI_TUTOR_QUESTIONS, STUDENT_INFO } from '../../data/studentData'
+import { AI_TUTOR_QUESTIONS } from '../../data/studentData'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } }
 const item: Variants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } }
@@ -17,28 +19,36 @@ const QUICK_RESPONSES: Record<string, string> = {
   default: "That's a great question! Let me help you with that. In your studies at DIS, it's important to understand the fundamentals. Would you like me to explain this step by step?",
   'fractions': "Fractions are easy when you think of pizza! 🍕 If you have 1/2 of a pizza, that means one piece out of two equal pieces. Let's practise: what is 1/2 + 1/4? Remember to find a common denominator!",
   'photosynthesis': "Photosynthesis is how plants make their own food! 🌿 Plants use sunlight, water, and carbon dioxide to produce glucose and oxygen. The formula is: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. Cool, right?",
-  'german': "Guten Tag, Emma! 🇩🇪 Let's practise German Artikel. In German, every noun has a gender: der (masculine), die (feminine), das (neuter). For example: der Hund (the dog), die Katze (the cat), das Buch (the book). Try one!",
+  'german': "Guten Tag! 🇩🇪 Let's practise German Artikel. In German, every noun has a gender: der (masculine), die (feminine), das (neuter). For example: der Hund (the dog), die Katze (the cat), das Buch (the book). Try one!",
   'multiplication': "Let's quiz you! 🔢 What is 7 × 8? Take your time... The answer is 56! A trick: 7 × 8 = 56, remember '5, 6, 7, 8' – five-six-seven-eight! Ready for another one?",
   'solar system': "Our solar system has 8 planets! 🪐 In order from the Sun: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. Remember this with: 'My Very Educated Mother Just Served Us Noodles'!",
 }
 
-function getAIResponse(text: string): string {
+function getAIResponse(text: string, firstName: string): string {
   const lower = text.toLowerCase()
   if (lower.includes('fraction')) return QUICK_RESPONSES.fractions
   if (lower.includes('photo')) return QUICK_RESPONSES.photosynthesis
-  if (lower.includes('german') || lower.includes('artikel')) return QUICK_RESPONSES.german
+  if (lower.includes('german') || lower.includes('artikel')) return `Guten Tag, ${firstName}! ${QUICK_RESPONSES.german}`
   if (lower.includes('multipl') || lower.includes('times table')) return QUICK_RESPONSES.multiplication
   if (lower.includes('solar') || lower.includes('planet')) return QUICK_RESPONSES['solar system']
   return QUICK_RESPONSES.default
 }
 
 export default function AITutor() {
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'welcome', role: 'ai', text: `Hello ${STUDENT_INFO.firstName}! 👋 I'm your AI Tutor. I'm here to help you with any subject – Maths, English, German, Science, and more. What would you like to learn today?` },
+    { id: 'welcome', role: 'ai', text: `Hello ${currentUser.firstName}! 👋 I'm your AI Tutor. I'm here to help you with any subject – Maths, English, German, Science, and more. What would you like to learn today?` },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const messageIdRef = useRef(0)
+
+  const nextMessageId = () => {
+    messageIdRef.current += 1
+    return `msg-${messageIdRef.current}`
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -46,12 +56,12 @@ export default function AITutor() {
 
   const send = async (text: string) => {
     if (!text.trim()) return
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', text }
+    const userMsg: Message = { id: nextMessageId(), role: 'user', text }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
     await new Promise((r) => setTimeout(r, 900))
-    const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'ai', text: getAIResponse(text) }
+    const aiMsg: Message = { id: nextMessageId(), role: 'ai', text: getAIResponse(text, currentUser.firstName) }
     setMessages((prev) => [...prev, aiMsg])
     setLoading(false)
   }
@@ -105,7 +115,7 @@ export default function AITutor() {
                   msg.role === 'ai' ? 'bg-blue-600' : 'bg-purple-600',
                 )}
               >
-                {msg.role === 'ai' ? <Bot className="h-4 w-4" /> : 'E'}
+                {msg.role === 'ai' ? <Bot className="h-4 w-4" /> : currentUser.avatar}
               </div>
               <div
                 className={clsx(

@@ -1,16 +1,16 @@
-// ─── Emma Johnson · Deggendorf International School ────────────────────────
+// ─── Student Profile · Deggendorf International School ────────────────────────
 
 export const STUDENT_INFO = {
-  name: 'Emma Johnson',
-  firstName: 'Emma',
-  lastName: 'Johnson',
+  name: 'Student User',
+  firstName: 'Student',
+  lastName: 'User',
   grade: '4A',
   age: 9,
   rollNumber: 12,
   house: 'Blue House',
   houseColor: '#3b82f6',
   classTeacher: 'Sarah Miller',
-  email: 'emma.johnson@dis.edu',
+  email: 'student@dis.edu',
   school: 'Deggendorf International School',
   schoolShort: 'DIS',
   location: 'Deggendorf, Germany',
@@ -133,7 +133,7 @@ export interface LeaderboardEntry {
 export const LEADERBOARD: LeaderboardEntry[] = [
   { rank: 1, name: 'Liam Müller',    grade: '4A', house: 'Red House',    xp: 3200, level: 15, avatar: 'L', houseColor: '#ef4444' },
   { rank: 2, name: 'Sophie Wagner',  grade: '4B', house: 'Green House',  xp: 2800, level: 13, avatar: 'S', houseColor: '#22c55e' },
-  { rank: 3, name: 'Emma Johnson',   grade: '4A', house: 'Blue House',   xp: 2450, level: 12, avatar: 'E', houseColor: '#3b82f6', isCurrentUser: true },
+  { rank: 3, name: 'Current Student', grade: '4A', house: 'Blue House',   xp: 2450, level: 12, avatar: 'U', houseColor: '#3b82f6', isCurrentUser: true },
   { rank: 4, name: 'Noah Fischer',   grade: '4A', house: 'Yellow House', xp: 2300, level: 11, avatar: 'N', houseColor: '#f59e0b' },
   { rank: 5, name: 'Mia Schneider',  grade: '4C', house: 'Red House',    xp: 2100, level: 11, avatar: 'M', houseColor: '#ef4444' },
   { rank: 6, name: 'Felix Bauer',    grade: '4B', house: 'Green House',  xp: 1980, level: 10, avatar: 'F', houseColor: '#22c55e' },
@@ -180,7 +180,7 @@ export interface StudentNotification {
 
 export const NOTIFICATIONS: StudentNotification[] = [
   { id: 'n-1', title: 'Homework Reminder',    message: 'Math multiplication tables due tomorrow!', type: 'reminder',     read: false, time: '2 hrs ago',  emoji: '📝' },
-  { id: 'n-2', title: 'Teacher Message',      message: 'Ms. Smith: Great work on your essay, Emma!', type: 'message',  read: false, time: '4 hrs ago',  emoji: '💬' },
+  { id: 'n-2', title: 'Teacher Message',      message: 'Ms. Smith: Great work on your essay!', type: 'message',  read: false, time: '4 hrs ago',  emoji: '💬' },
   { id: 'n-3', title: 'School Announcement',  message: 'Sports Day this Friday – bring your PE kit!', type: 'announcement', read: true, time: '1 day ago', emoji: '📣' },
   { id: 'n-4', title: 'Exam Reminder',        message: 'Math Quiz next Tuesday. Study chapters 7–9.', type: 'exam',     read: false, time: '2 days ago', emoji: '⚠️' },
 ]

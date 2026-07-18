@@ -1,3 +1,5 @@
+import type { User, UserRole } from '../types'
+
 export function cn(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(' ')
 }
@@ -32,4 +34,41 @@ export function gradeLetter(score: number, maxScore: number): string {
 
 export function randomId(): string {
   return Math.random().toString(36).substring(2, 10)
+}
+
+export interface CurrentUserIdentity {
+  firstName: string
+  lastName: string
+  fullName: string
+  avatar: string
+  role: UserRole
+}
+
+function splitFullName(name: string): { firstName: string; lastName: string } {
+  const normalized = name.trim()
+  if (!normalized) return { firstName: 'User', lastName: '' }
+
+  const parts = normalized.split(/\s+/)
+  const [firstName, ...rest] = parts
+  return { firstName, lastName: rest.join(' ') }
+}
+
+export function getCurrentUserIdentity(
+  user: User | null,
+  fallbackRole: UserRole = 'student',
+): CurrentUserIdentity {
+  const fullName = user?.name?.trim() || 'User'
+  const inferred = splitFullName(fullName)
+  const firstName = user?.firstName?.trim() || inferred.firstName
+  const lastName = user?.lastName?.trim() || inferred.lastName
+  const resolvedFullName = [firstName, lastName].filter(Boolean).join(' ')
+  const avatar = (user?.avatar?.trim() || initials(resolvedFullName || fullName || 'User')).slice(0, 2)
+
+  return {
+    firstName,
+    lastName,
+    fullName: resolvedFullName || fullName,
+    avatar,
+    role: user?.role ?? fallbackRole,
+  }
 }

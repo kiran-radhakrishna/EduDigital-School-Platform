@@ -21,6 +21,7 @@ import {
   LogOut,
   Medal,
   Settings,
+  Ticket,
   Trophy,
   User,
 } from 'lucide-react'
@@ -86,6 +87,7 @@ const STUDENT_NAV: SidebarSection[] = [
     title: 'Wellbeing',
     items: [
       { label: 'Mental Health', path: '/student/mental-health', icon: Heart },
+      { label: 'Events', path: '/student/events', icon: Ticket },
     ],
   },
   {
@@ -107,6 +109,7 @@ function getGenericNav(basePath: string, t: ReturnType<typeof useLanguage>['t'])
         { label: t.dashboard.grades,         path: `${basePath}/grades`,        icon: BarChart3 },
         { label: t.dashboard.attendance,     path: `${basePath}/attendance`,    icon: CalendarCheck },
         { label: t.dashboard.subjects,       path: `${basePath}/subjects`,      icon: BookOpen },
+        { label: 'Events',                   path: `${basePath}/events`,        icon: Ticket },
         { label: t.dashboard.notifications,  path: `${basePath}/notifications`, icon: Bell },
         { label: t.dashboard.profile,        path: `${basePath}/profile`,       icon: User },
         { label: t.dashboard.settings,       path: `${basePath}/settings`,      icon: Settings },
@@ -123,6 +126,7 @@ function getParentNav(t: ReturnType<typeof useLanguage>['t']): SidebarSection[] 
         { label: t.dashboard.grades,        path: '/parent/grades',        icon: BarChart3 },
         { label: t.dashboard.attendance,    path: '/parent/attendance',    icon: CalendarCheck },
         { label: t.dashboard.timetable,     path: '/parent/timetable',     icon: Calendar },
+        { label: 'Child Events',            path: '/parent/events',        icon: Ticket },
         { label: t.dashboard.notifications, path: '/parent/notifications', icon: Bell },
         { label: t.dashboard.profile,       path: '/parent/profile',       icon: User },
         { label: t.dashboard.settings,      path: '/parent/settings',      icon: Settings },
@@ -137,6 +141,7 @@ function getAdminNav(t: ReturnType<typeof useLanguage>['t']): SidebarSection[] {
       items: [
         { label: t.dashboard.overview,      path: '/admin/dashboard',     icon: LayoutDashboard },
         { label: t.dashboard.subjects,      path: '/admin/subjects',      icon: BookOpen },
+        { label: 'Events Management',       path: '/admin/events',        icon: Ticket },
         { label: t.dashboard.notifications, path: '/admin/notifications', icon: Bell },
         { label: t.dashboard.profile,       path: '/admin/profile',       icon: User },
         { label: t.dashboard.settings,      path: '/admin/settings',      icon: Settings },

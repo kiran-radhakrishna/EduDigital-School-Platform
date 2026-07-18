@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { Brain, CheckCircle2 } from 'lucide-react'
 import clsx from 'clsx'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } }
 const item: Variants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } }
@@ -53,6 +55,8 @@ const PERSONALITY_RESULTS: Record<string, { type: string; emoji: string; desc: s
 }
 
 export default function PersonalityAssessment() {
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
   const [started, setStarted] = useState(false)
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
@@ -84,7 +88,9 @@ export default function PersonalityAssessment() {
         <motion.div variants={item} className="text-center">
           <span className="text-6xl">{r.emoji}</span>
           <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">You're a {r.type}!</h1>
-          <p className="mt-2 text-gray-500">Great work completing the assessment, Emma!</p>
+          <p className="mt-2 text-gray-500">
+            Great work completing the assessment, {currentUser.firstName}!
+          </p>
         </motion.div>
         <motion.div
           variants={item}

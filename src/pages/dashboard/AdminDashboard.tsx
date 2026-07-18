@@ -6,6 +6,8 @@ import { Avatar } from '../../components/common/Avatar'
 import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
 import { StatCard } from '../../components/common/StatCard'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const enrollmentByGrade = [
   { grade: 'Grade 1', students: 92 },
@@ -29,6 +31,12 @@ const attendanceTrend = [
   { month: 'May', attendance: 93.2 },
   { month: 'Jun', attendance: 92.9 },
   { month: 'Jul', attendance: 93.6 },
+]
+
+const wellbeingByGrade = [
+  { grade: 'Grade 4', happy: 74, focused: 16, support: 10 },
+  { grade: 'Grade 5', happy: 61, focused: 23, support: 16 },
+  { grade: 'Grade 6', happy: 69, focused: 19, support: 12 },
 ]
 
 const recentRegistrations = [
@@ -68,6 +76,9 @@ const formatDate = (value: string) =>
   }).format(new Date(value))
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'admin')
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -76,7 +87,9 @@ export default function AdminDashboard() {
       className="space-y-6"
     >
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">School Overview</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Welcome back, {currentUser.firstName}! School Overview
+        </h1>
         <p className="text-gray-500 dark:text-gray-400">
           Monitor school-wide performance, enrollment, attendance, and recent activity.
         </p>
@@ -120,6 +133,40 @@ export default function AdminDashboard() {
           </div>
         </Card>
       </div>
+
+      <Card title="Anonymous Wellbeing Analytics" subtitle="No student names. Aggregated by grade.">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={wellbeingByGrade}>
+                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                <XAxis dataKey="grade" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Bar dataKey="happy" fill="#22c55e" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-3">
+            {wellbeingByGrade.map((entry) => (
+              <div key={entry.grade} className="rounded-xl border border-gray-100 p-4 dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">{entry.grade}</p>
+                <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                  <p className="rounded-lg bg-green-50 px-2 py-1 text-center font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300">
+                    Happy {entry.happy}%
+                  </p>
+                  <p className="rounded-lg bg-blue-50 px-2 py-1 text-center font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                    Focused {entry.focused}%
+                  </p>
+                  <p className="rounded-lg bg-amber-50 px-2 py-1 text-center font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                    Support {entry.support}%
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       <Card title="Recent Registrations">
         <div className="space-y-4">

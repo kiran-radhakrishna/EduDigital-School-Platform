@@ -2,14 +2,18 @@ import { useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  Bot, Brain, Briefcase, Calendar, CalendarCheck, CheckCircle2, Clock,
-  Coins, Flame, FlaskConical, Heart, Smile, Star, Trophy, Zap,
+  Bot, Brain, Briefcase, CalendarCheck, CheckCircle2, Clock,
+  Coins, Flame, Heart, Smile, Star, Trophy, Zap,
 } from 'lucide-react'
 import {
   Cell, Pie, PieChart, ResponsiveContainer, Tooltip,
 } from 'recharts'
 import clsx from 'clsx'
+import { useAuth } from '../../hooks/useAuth'
+import { useWellbeing } from '../../hooks/useWellbeing'
 import { ProgressBar } from '../../components/common/ProgressBar'
+import { getCurrentUserIdentity } from '../../utils/helpers'
+import type { WellbeingEmotion } from '../../types/wellbeing'
 import {
   ACHIEVEMENTS, AI_TUTOR_QUESTIONS, ASSIGNMENT_STATS, ATTENDANCE_STATS,
   CALENDAR_EVENTS, CAREER_SUGGESTIONS, GRADES, HOMEWORK, LEADERBOARD,
@@ -29,6 +33,8 @@ const item: Variants = {
 }
 
 const cardHover = { scale: 1.015, transition: { duration: 0.2 } }
+const MENTAL_HEALTH_QUOTE =
+  MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]
 
 // ─── Shared card wrapper ─────────────────────────────────────────────────────
 
@@ -63,7 +69,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ─── Welcome Hero Card ───────────────────────────────────────────────────────
 
-function WelcomeCard() {
+function WelcomeCard({ firstName }: { firstName: string }) {
   const xpPct = Math.round((STUDENT_INFO.xp / STUDENT_INFO.xpNext) * 100)
 
   return (
@@ -83,7 +89,7 @@ function WelcomeCard() {
             {STUDENT_INFO.school}
           </div>
           <h1 className="mt-3 text-2xl font-bold lg:text-3xl">
-            Welcome back, {STUDENT_INFO.firstName}! 👋
+            Welcome back, {firstName}! 👋
           </h1>
           <p className="mt-1 text-purple-200">
             Grade {STUDENT_INFO.grade} · Roll No. {STUDENT_INFO.rollNumber} · {STUDENT_INFO.house}
@@ -371,46 +377,51 @@ function AchievementsCard() {
 
 // ─── Leaderboard ─────────────────────────────────────────────────────────────
 
-function LeaderboardCard() {
+function LeaderboardCard({ fullName, avatar }: { fullName: string; avatar: string }) {
   const medalEmoji = (rank: number) => rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null
 
   return (
     <DashCard>
       <SectionTitle>Leaderboard · Top 10</SectionTitle>
       <div className="space-y-2">
-        {LEADERBOARD.map((entry) => (
-          <div
-            key={entry.rank}
-            className={clsx(
-              'flex items-center gap-3 rounded-xl px-3 py-2 transition-colors',
-              entry.isCurrentUser
-                ? 'bg-purple-50 ring-1 ring-purple-200 dark:bg-purple-500/10 dark:ring-purple-500/30'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
-            )}
-          >
-            <div className="w-5 shrink-0 text-center">
-              {medalEmoji(entry.rank) ?? (
-                <span className="text-xs font-bold text-gray-400">{entry.rank}</span>
-              )}
-            </div>
+        {LEADERBOARD.map((entry) => {
+          const displayName = entry.isCurrentUser ? fullName : entry.name
+          const displayAvatar = entry.isCurrentUser ? avatar : entry.avatar
+
+          return (
             <div
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ backgroundColor: entry.houseColor }}
+              key={entry.rank}
+              className={clsx(
+                'flex items-center gap-3 rounded-xl px-3 py-2 transition-colors',
+                entry.isCurrentUser
+                  ? 'bg-purple-50 ring-1 ring-purple-200 dark:bg-purple-500/10 dark:ring-purple-500/30'
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+              )}
             >
-              {entry.avatar}
+              <div className="w-5 shrink-0 text-center">
+                {medalEmoji(entry.rank) ?? (
+                  <span className="text-xs font-bold text-gray-400">{entry.rank}</span>
+                )}
+              </div>
+              <div
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{ backgroundColor: entry.houseColor }}
+              >
+                {displayAvatar}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className={clsx('truncate text-sm font-medium', entry.isCurrentUser ? 'font-semibold text-purple-700 dark:text-purple-400' : 'text-gray-900 dark:text-white')}>
+                  {displayName} {entry.isCurrentUser && '(You)'}
+                </p>
+                <p className="text-[10px] text-gray-400">{entry.house} · Lv.{entry.level}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{entry.xp.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-400">XP</p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className={clsx('truncate text-sm font-medium', entry.isCurrentUser ? 'font-semibold text-purple-700 dark:text-purple-400' : 'text-gray-900 dark:text-white')}>
-                {entry.name} {entry.isCurrentUser && '(You)'}
-              </p>
-              <p className="text-[10px] text-gray-400">{entry.house} · Lv.{entry.level}</p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{entry.xp.toLocaleString()}</p>
-              <p className="text-[10px] text-gray-400">XP</p>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </DashCard>
   )
@@ -601,7 +612,7 @@ function StudyPlannerCard() {
 
 // ─── Career Suggestions ───────────────────────────────────────────────────────
 
-function CareerCard() {
+function CareerCard({ firstName }: { firstName: string }) {
   return (
     <DashCard className="lg:col-span-2">
       <div className="mb-3 flex items-center gap-2">
@@ -609,7 +620,7 @@ function CareerCard() {
         <SectionTitle>Career Suggestions</SectionTitle>
       </div>
       <p className="mb-4 text-xs text-gray-500 italic dark:text-gray-400">
-        Based on your interests and performance, Emma might thrive as a…
+        Based on your interests and performance, {firstName} might thrive as a…
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {CAREER_SUGGESTIONS.map((c) => (
@@ -640,7 +651,7 @@ function MentalHealthCard() {
   const [mood, setMood] = useState<Mood>(null)
   const [breathing, setBreathing] = useState(false)
 
-  const quote = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]
+  const quote = MENTAL_HEALTH_QUOTE
 
   const moods: Array<{ key: Mood; emoji: string; label: string; color: string }> = [
     { key: 'happy',   emoji: '😊', label: 'Happy',   color: 'bg-green-100 ring-green-400 dark:bg-green-500/20' },
@@ -738,9 +749,97 @@ function AssessmentCard({
   )
 }
 
+function WellbeingRecommendationCard({ emotion }: { emotion: WellbeingEmotion }) {
+  const navigate = useNavigate()
+
+  const recommendationByEmotion: Record<WellbeingEmotion, { title: string; description: string; cta: string; path: string }> = {
+    happy: {
+      title: 'You are in a great state today',
+      description: 'Amazing energy! Keep your momentum with high-impact learning goals.',
+      cta: 'View Achievements',
+      path: '/student/achievements',
+    },
+    focused: {
+      title: 'Focus mode detected',
+      description: 'Perfect moment to tackle pending assignments while concentration is high.',
+      cta: 'Open Assignments',
+      path: '/student/assignments',
+    },
+    calm: {
+      title: 'Calm and steady',
+      description: 'A balanced state is ideal for consistent progress. Keep going at your pace.',
+      cta: 'Open Study Planner',
+      path: '/student/study-planner',
+    },
+    neutral: {
+      title: 'Steady start',
+      description: 'A quick warm-up activity can help you build momentum for today.',
+      cta: 'Open AI Tutor',
+      path: '/student/ai-tutor',
+    },
+    tired: {
+      title: 'Recharge recommendation',
+      description: 'Take a short break and then return with renewed focus.',
+      cta: 'Start Breathing Exercise',
+      path: '/student/mental-health',
+    },
+    sad: {
+      title: 'Supportive day plan',
+      description: 'Keep things gentle. Small wins today are still meaningful progress.',
+      cta: 'Open Wellbeing Tools',
+      path: '/student/mental-health',
+    },
+    stressed: {
+      title: 'Stress support available',
+      description: 'Try a 2-minute breathing exercise before jumping into tasks.',
+      cta: 'Open Breathing Exercise',
+      path: '/student/mental-health',
+    },
+    anxious: {
+      title: 'Counselor resources available',
+      description: 'You are not alone. Support resources are available when needed.',
+      cta: 'View Support Resources',
+      path: '/student/mental-health',
+    },
+  }
+
+  const recommendation = recommendationByEmotion[emotion]
+
+  return (
+    <DashCard className="border border-indigo-100 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">{recommendation.title}</h3>
+          <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">{recommendation.description}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate(recommendation.path)}
+          className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-indigo-700"
+        >
+          {recommendation.cta}
+        </button>
+      </div>
+    </DashCard>
+  )
+}
+
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
 export default function StudentDashboard() {
+  const { user } = useAuth()
+  const { latestAssessment } = useWellbeing()
+  const currentUser = getCurrentUserIdentity(user, 'student')
+  const currentEmotion = latestAssessment?.emotion
+  const showAchievementsFirst = currentEmotion === 'happy'
+  const showAssignmentsFirst = currentEmotion === 'focused'
+  const showRecommendation =
+    currentEmotion === 'happy' ||
+    currentEmotion === 'focused' ||
+    currentEmotion === 'tired' ||
+    currentEmotion === 'stressed' ||
+    currentEmotion === 'anxious'
+
   return (
     <motion.div
       variants={container}
@@ -749,15 +848,28 @@ export default function StudentDashboard() {
       className="space-y-4 pb-8"
     >
       {/* Welcome Hero */}
-      <WelcomeCard />
+      <WelcomeCard firstName={currentUser.firstName} />
+
+      {showRecommendation && currentEmotion && <WellbeingRecommendationCard emotion={currentEmotion} />}
+
+      {showAchievementsFirst && <AchievementsCard />}
 
       {/* Row 1: Timetable | Homework | Quick Actions */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <TimetableCard />
         <HomeworkCard />
         <div className="space-y-4">
-          <QuickActionsCard />
-          <AssignmentsCard />
+          {showAssignmentsFirst ? (
+            <>
+              <AssignmentsCard />
+              <QuickActionsCard />
+            </>
+          ) : (
+            <>
+              <QuickActionsCard />
+              <AssignmentsCard />
+            </>
+          )}
         </div>
       </div>
 
@@ -770,11 +882,11 @@ export default function StudentDashboard() {
       </div>
 
       {/* Row 3: Achievements */}
-      <AchievementsCard />
+      {!showAchievementsFirst && <AchievementsCard />}
 
       {/* Row 4: Leaderboard | Calendar | Notifications */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <LeaderboardCard />
+        <LeaderboardCard fullName={currentUser.fullName} avatar={currentUser.avatar} />
         <CalendarCard />
         <NotificationsCard />
       </div>
@@ -787,7 +899,7 @@ export default function StudentDashboard() {
 
       {/* Row 6: Career Suggestions | Mental Health */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <CareerCard />
+        <CareerCard firstName={currentUser.firstName} />
         <MentalHealthCard />
       </div>
 
@@ -818,7 +930,7 @@ export default function StudentDashboard() {
       >
         <Flame className="h-5 w-5" />
         <span className="font-semibold">
-          You're on a {STUDENT_INFO.studyStreak}-day study streak, Emma! Keep it up! 🚀
+          You're on a {STUDENT_INFO.studyStreak}-day study streak, {currentUser.firstName}! Keep it up! 🚀
         </span>
         <Trophy className="h-5 w-5" />
         <CheckCircle2 className="h-5 w-5" />

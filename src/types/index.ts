@@ -1,7 +1,16 @@
-export type UserRole = 'student' | 'teacher' | 'parent' | 'admin'
+export declare enum Role {
+  Student = 'student',
+  Teacher = 'teacher',
+  Parent = 'parent',
+  Admin = 'admin',
+}
+
+export type UserRole = `${Role}`
 
 export interface User {
   id: string
+  firstName: string
+  lastName: string
   name: string
   email: string
   role: UserRole

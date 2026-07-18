@@ -3,6 +3,8 @@ import { Briefcase } from 'lucide-react'
 import clsx from 'clsx'
 import { CAREER_SUGGESTIONS, GRADES } from '../../data/studentData'
 import { ProgressBar } from '../../components/common/ProgressBar'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }
 const item: Variants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }
@@ -11,6 +13,9 @@ const avgGrade = Math.round(GRADES.reduce((s, g) => s + g.score, 0) / GRADES.len
 const topSubject = GRADES.reduce((top, g) => (g.score > top.score ? g : top), GRADES[0])
 
 export default function CareerSuggestions() {
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
+
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6 pb-8">
       {/* Header */}
@@ -20,7 +25,7 @@ export default function CareerSuggestions() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Career Suggestions</h1>
-          <p className="text-sm text-gray-500">Personalised for Emma Johnson</p>
+          <p className="text-sm text-gray-500">Personalised for {currentUser.fullName}</p>
         </div>
       </motion.div>
 
@@ -86,7 +91,9 @@ export default function CareerSuggestions() {
 
             {/* Why */}
             <div className="rounded-xl bg-white/70 p-3 dark:bg-gray-800/70">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Why Emma?</p>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                Why {currentUser.firstName}?
+              </p>
               <p className="text-sm text-gray-700 leading-relaxed dark:text-gray-300">{career.reason}</p>
             </div>
           </motion.div>

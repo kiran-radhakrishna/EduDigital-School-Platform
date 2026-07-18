@@ -7,6 +7,7 @@ import { Card } from '../../components/common/Card'
 import { StatCard } from '../../components/common/StatCard'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const performanceTrend = [
   { month: 'Feb', average: 78 },
@@ -46,12 +47,19 @@ const quickActions = [
   },
 ]
 
+const classWellbeing = [
+  { grade: '4A', happy: 72, neutral: 18, support: 10 },
+  { grade: '5B', happy: 66, neutral: 22, support: 12 },
+  { grade: '6A', happy: 69, neutral: 20, support: 11 },
+]
+
 export default function TeacherDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { t } = useLanguage()
+  const currentUser = getCurrentUserIdentity(user, 'teacher')
 
-  const firstName = user?.name?.split(' ')[0] ?? 'Teacher'
+  const firstName = currentUser.firstName
 
   return (
     <motion.div
@@ -109,6 +117,30 @@ export default function TeacherDashboard() {
               <Line type="monotone" dataKey="average" stroke="#8b5cf6" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      </Card>
+
+      <Card title="Today&apos;s Class Wellbeing" subtitle="Anonymous wellbeing insights only">
+        <div className="space-y-3">
+          {classWellbeing.map((entry) => (
+            <div
+              key={entry.grade}
+              className="rounded-xl border border-gray-100 p-4 dark:border-gray-700"
+            >
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Grade {entry.grade}</p>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                <p className="rounded-lg bg-green-50 px-2 py-1 text-center font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300">
+                  Happy {entry.happy}%
+                </p>
+                <p className="rounded-lg bg-blue-50 px-2 py-1 text-center font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                  Neutral {entry.neutral}%
+                </p>
+                <p className="rounded-lg bg-amber-50 px-2 py-1 text-center font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                  Needs Support {entry.support}%
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 

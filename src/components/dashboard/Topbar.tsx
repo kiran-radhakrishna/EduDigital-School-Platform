@@ -6,7 +6,6 @@ import { Avatar } from '../common/Avatar'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useTheme } from '../../hooks/useTheme'
-import type { Lang } from '../../context/LanguageContext'
 import { STUDENT_INFO } from '../../data/studentData'
 
 export interface TopbarProps {
@@ -34,7 +33,7 @@ export default function Topbar({ onMenuClick, title }: TopbarProps) {
     navigate('/login')
   }
 
-  const toggleLang = () => setLang((lang === 'en' ? 'de' : 'en') as Lang)
+  const toggleLang = () => setLang(lang === 'en' ? 'de' : 'en')
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white/95 px-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95 lg:px-6">

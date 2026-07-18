@@ -3,6 +3,9 @@ import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider } from './context/AuthContext'
+import { WellbeingProvider } from './context/WellbeingContext'
+import { EventsProvider } from './context/EventsContext'
+import { ParentProvider } from './context/ParentContext'
 
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
@@ -13,9 +16,11 @@ import DashboardLayout from './layouts/DashboardLayout'
 
 // Dashboard home pages
 import StudentDashboard from './pages/dashboard/StudentDashboard'
-import TeacherDashboard from './pages/dashboard/TeacherDashboard'
-import ParentDashboard from './pages/dashboard/ParentDashboard'
+import TeacherDashboard from './pages/teacher/Dashboard'
+import ClassWorkspace from './pages/teacher/ClassWorkspace'
 import AdminDashboard from './pages/dashboard/AdminDashboard'
+import ParentDashboard from './pages/parent/Dashboard'
+import ChildDashboard from './pages/parent/ChildDashboard'
 
 // Shared dashboard pages
 import Profile from './pages/dashboard/Profile'
@@ -37,20 +42,32 @@ import PersonalityAssessment from './pages/student/PersonalityAssessment'
 import SubjectAssessment from './pages/student/SubjectAssessment'
 import CareerSuggestions from './pages/student/CareerSuggestions'
 import MentalHealth from './pages/student/MentalHealth'
+import AIWellbeingCheck from './pages/wellbeing/AIWellbeingCheck'
+import StudentEvents from './pages/student/Events'
+import TeacherEventsDashboard from './pages/teacher/EventsDashboard'
+import ParentChildEvents from './pages/parent/ChildEvents'
+import AuthorityEventsManagement from './pages/dashboard/AuthorityEventsManagement'
+import OrganizerPortal from './pages/organizer/OrganizerPortal'
+import EventDetailsPage from './pages/events/EventDetails'
 
 function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+          <WellbeingProvider>
+            <EventsProvider>
+              <ParentProvider>
+                <BrowserRouter>
+                  <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+                <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/wellbeing-check" element={<AIWellbeingCheck />} />
+                <Route path="/organizer/portal" element={<OrganizerPortal />} />
 
               {/* Student routes */}
               <Route path="/student" element={<DashboardLayout />}>
@@ -69,6 +86,7 @@ function App() {
                 <Route path="subject-assessment"     element={<SubjectAssessment />} />
                 <Route path="career-suggestions"     element={<CareerSuggestions />} />
                 <Route path="mental-health"          element={<MentalHealth />} />
+                <Route path="events"                 element={<StudentEvents />} />
                 <Route path="notifications"          element={<Notifications />} />
                 <Route path="profile"                element={<Profile />} />
                 <Route path="settings"               element={<Settings />} />
@@ -78,12 +96,14 @@ function App() {
               {/* Teacher routes */}
               <Route path="/teacher" element={<DashboardLayout />}>
                 <Route path="dashboard"     element={<TeacherDashboard />} />
+                <Route path="class/:classId" element={<ClassWorkspace />} />
                 <Route path="timetable"     element={<Timetable />} />
                 <Route path="assignments"   element={<Assignments />} />
                 <Route path="grades"        element={<Grades />} />
                 <Route path="attendance"    element={<Attendance />} />
                 <Route path="subjects"      element={<Subjects />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="events"        element={<TeacherEventsDashboard />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />
                 <Route index element={<Navigate replace to="dashboard" />} />
@@ -92,10 +112,12 @@ function App() {
               {/* Parent routes */}
               <Route path="/parent" element={<DashboardLayout />}>
                 <Route path="dashboard"     element={<ParentDashboard />} />
+                <Route path="child/:childId" element={<ChildDashboard />} />
                 <Route path="grades"        element={<Grades />} />
                 <Route path="attendance"    element={<Attendance />} />
                 <Route path="timetable"     element={<Timetable />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="events"        element={<ParentChildEvents />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />
                 <Route index element={<Navigate replace to="dashboard" />} />
@@ -105,20 +127,25 @@ function App() {
               <Route path="/admin" element={<DashboardLayout />}>
                 <Route path="dashboard"     element={<AdminDashboard />} />
                 <Route path="subjects"      element={<Subjects />} />
+                <Route path="events"        element={<AuthorityEventsManagement />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />
                 <Route index element={<Navigate replace to="dashboard" />} />
               </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="/events/:eventId" element={<EventDetailsPage />} />
+              </Routes>
+               </BrowserRouter>
+             </ParentProvider>
+           </EventsProvider>
+          </WellbeingProvider>
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   )
 }
-
+ 
 export default App

@@ -1,7 +1,9 @@
 import { motion, type Variants } from 'framer-motion'
 import { Medal } from 'lucide-react'
 import clsx from 'clsx'
-import { LEADERBOARD, STUDENT_INFO } from '../../data/studentData'
+import { LEADERBOARD } from '../../data/studentData'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } }
 const item: Variants = { hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0, transition: { duration: 0.35 } } }
@@ -13,7 +15,9 @@ const medalFor = (rank: number) =>
   : null
 
 export default function Leaderboard() {
-  const emma = LEADERBOARD.find((e) => e.isCurrentUser)!
+  const { user } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
+  const currentStudent = LEADERBOARD.find((e) => e.isCurrentUser)!
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6 pb-8">
@@ -28,20 +32,20 @@ export default function Leaderboard() {
         </div>
       </motion.div>
 
-      {/* Emma's position highlight */}
+      {/* Current student's position highlight */}
       <motion.div
         variants={item}
         className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-purple-600 to-violet-700 p-5 text-white shadow-lg shadow-purple-500/20"
       >
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-2xl font-black">
-          #{emma.rank}
+          #{currentStudent.rank}
         </div>
         <div className="flex-1">
-          <p className="font-bold text-lg">Emma's Position</p>
-          <p className="text-purple-200 text-sm">{emma.house} · Level {emma.level}</p>
+          <p className="font-bold text-lg">{currentUser.firstName}&apos;s Position</p>
+          <p className="text-purple-200 text-sm">{currentStudent.house} · Level {currentStudent.level}</p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-black">{emma.xp.toLocaleString()}</p>
+          <p className="text-2xl font-black">{currentStudent.xp.toLocaleString()}</p>
           <p className="text-purple-200 text-sm">XP</p>
         </div>
       </motion.div>
@@ -74,7 +78,11 @@ export default function Leaderboard() {
         variants={item}
         className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800"
       >
-        {LEADERBOARD.map((entry) => (
+        {LEADERBOARD.map((entry) => {
+          const displayName = entry.isCurrentUser ? currentUser.fullName : entry.name
+          const displayAvatar = entry.isCurrentUser ? currentUser.avatar : entry.avatar
+
+          return (
           <div
             key={entry.rank}
             className={clsx(
@@ -92,11 +100,11 @@ export default function Leaderboard() {
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
               style={{ backgroundColor: entry.houseColor }}
             >
-              {entry.avatar}
+              {displayAvatar}
             </div>
             <div className="min-w-0 flex-1">
               <p className={clsx('text-sm font-semibold', entry.isCurrentUser ? 'text-purple-700 dark:text-purple-400' : 'text-gray-900 dark:text-white')}>
-                {entry.name} {entry.isCurrentUser && '(You)'}
+                {displayName} {entry.isCurrentUser && '(You)'}
               </p>
               <p className="text-xs text-gray-500">{entry.house} · Grade {entry.grade} · Level {entry.level}</p>
             </div>
@@ -105,7 +113,8 @@ export default function Leaderboard() {
               <p className="text-[10px] text-gray-400">XP</p>
             </div>
           </div>
-        ))}
+            )
+          })}
       </motion.div>
     </motion.div>
   )
