@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3, BookOpen, Calendar, FileText, MessageSquare, Shield, TrendingUp, User, Zap } from 'lucide-react'
-import { useParent } from '../../context/ParentContext'
+import { useParent } from '../../hooks/useParent'
 import { parentService } from '../../services/parentService'
 import { ChildOverviewTab } from '../../components/parent/ChildOverviewTab'
 import { ChildWellbeingTab } from '../../components/parent/ChildWellbeingTab'

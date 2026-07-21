@@ -31,6 +31,16 @@ import type {
   FamilyAchievement,
 } from '../types/parent'
 
+interface ParentSearchResult {
+  type: 'homework' | 'assignment' | 'message' | 'event' | 'certificate'
+  id: string
+  title: string
+  childId: string
+  childName: string
+  date: string
+  preview: string
+}
+
 export const parentService = {
   getParentProfile(): ParentProfile {
     return PARENT_PROFILE
@@ -122,8 +132,8 @@ export const parentService = {
     return FAMILY_ACHIEVEMENTS
   },
 
-  searchParentContent(query: string): any[] {
-    const results: any[] = []
+  searchParentContent(query: string): ParentSearchResult[] {
+    const results: ParentSearchResult[] = []
     const lowerQuery = query.toLowerCase()
 
     this.getParentChildren().forEach((child) => {

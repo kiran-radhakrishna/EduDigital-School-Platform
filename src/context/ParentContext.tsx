@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { parentService } from '../services/parentService'
+import { ParentContext, type ParentContextType } from './parent-context'
 import type {
   ParentProfile,
   ChildProfile,
@@ -7,24 +8,6 @@ import type {
   EventApprovalRequest,
   FamilyNotification,
 } from '../types/parent'
-
-interface ParentContextType {
-  parentProfile: ParentProfile | null
-  children: ChildProfile[]
-  selectedChildId: string | null
-  setSelectedChildId: (childId: string) => void
-  childProgress: Record<string, ChildProgress | undefined>
-  pendingApprovals: EventApprovalRequest[]
-  notifications: FamilyNotification[]
-  unreadNotificationCount: number
-  approveEvent: (requestId: string) => void
-  rejectEvent: (requestId: string, reason?: string) => void
-  markNotificationAsRead: (notificationId: string) => void
-  markAllNotificationsAsRead: () => void
-  refreshData: () => void
-}
-
-const ParentContext = createContext<ParentContextType | undefined>(undefined)
 
 interface ParentProviderProps {
   children: React.ReactNode
@@ -60,6 +43,7 @@ export function ParentProvider({ children }: ParentProviderProps) {
   }, [selectedChildId])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data hydration from parentService on mount
     refreshData()
   }, [refreshData])
 
@@ -102,12 +86,4 @@ export function ParentProvider({ children }: ParentProviderProps) {
   }
 
   return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
-}
-
-export function useParent(): ParentContextType {
-  const context = React.useContext(ParentContext)
-  if (context === undefined) {
-    throw new Error('useParent must be used within a ParentProvider')
-  }
-  return context
 }
