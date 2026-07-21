@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './context/ThemeContext'
@@ -6,49 +7,52 @@ import { AuthProvider } from './context/AuthContext'
 import { WellbeingProvider } from './context/WellbeingContext'
 import { EventsProvider } from './context/EventsContext'
 import { ParentProvider } from './context/ParentContext'
+import PageLoader from './components/common/PageLoader'
 
+// Landing & auth routes are kept eager so the first paint never waits on a lazy chunk
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 
-import DashboardLayout from './layouts/DashboardLayout'
+// Everything reached only after landing/auth is lazy-loaded into its own chunk
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
 
-// Dashboard home pages
-import StudentDashboard from './pages/dashboard/StudentDashboard'
-import TeacherDashboard from './pages/teacher/Dashboard'
-import ClassWorkspace from './pages/teacher/ClassWorkspace'
-import AdminDashboard from './pages/dashboard/AdminDashboard'
-import ParentDashboard from './pages/parent/Dashboard'
-import ChildDashboard from './pages/parent/ChildDashboard'
+// Dashboard home pages (role-specific)
+const StudentDashboard = lazy(() => import('./pages/dashboard/StudentDashboard'))
+const TeacherDashboard = lazy(() => import('./pages/teacher/Dashboard'))
+const ClassWorkspace = lazy(() => import('./pages/teacher/ClassWorkspace'))
+const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'))
+const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'))
+const ChildDashboard = lazy(() => import('./pages/parent/ChildDashboard'))
 
 // Shared dashboard pages
-import Profile from './pages/dashboard/Profile'
-import Settings from './pages/dashboard/Settings'
-import Notifications from './pages/dashboard/Notifications'
-import Timetable from './pages/dashboard/Timetable'
-import Attendance from './pages/dashboard/Attendance'
-import Assignments from './pages/dashboard/Assignments'
-import Subjects from './pages/dashboard/Subjects'
-import Grades from './pages/dashboard/Grades'
+const Profile = lazy(() => import('./pages/dashboard/Profile'))
+const Settings = lazy(() => import('./pages/dashboard/Settings'))
+const Notifications = lazy(() => import('./pages/dashboard/Notifications'))
+const Timetable = lazy(() => import('./pages/dashboard/Timetable'))
+const Attendance = lazy(() => import('./pages/dashboard/Attendance'))
+const Assignments = lazy(() => import('./pages/dashboard/Assignments'))
+const Subjects = lazy(() => import('./pages/dashboard/Subjects'))
+const Grades = lazy(() => import('./pages/dashboard/Grades'))
 
 // Student-specific pages
-import StudyPlanner from './pages/student/StudyPlanner'
-import Homework from './pages/student/Homework'
-import Achievements from './pages/student/Achievements'
-import Leaderboard from './pages/student/Leaderboard'
-import AITutor from './pages/student/AITutor'
-import PersonalityAssessment from './pages/student/PersonalityAssessment'
-import SubjectAssessment from './pages/student/SubjectAssessment'
-import CareerSuggestions from './pages/student/CareerSuggestions'
-import MentalHealth from './pages/student/MentalHealth'
-import AIWellbeingCheck from './pages/wellbeing/AIWellbeingCheck'
-import StudentEvents from './pages/student/Events'
-import TeacherEventsDashboard from './pages/teacher/EventsDashboard'
-import ParentChildEvents from './pages/parent/ChildEvents'
-import AuthorityEventsManagement from './pages/dashboard/AuthorityEventsManagement'
-import OrganizerPortal from './pages/organizer/OrganizerPortal'
-import EventDetailsPage from './pages/events/EventDetails'
+const StudyPlanner = lazy(() => import('./pages/student/StudyPlanner'))
+const Homework = lazy(() => import('./pages/student/Homework'))
+const Achievements = lazy(() => import('./pages/student/Achievements'))
+const Leaderboard = lazy(() => import('./pages/student/Leaderboard'))
+const AITutor = lazy(() => import('./pages/student/AITutor'))
+const PersonalityAssessment = lazy(() => import('./pages/student/PersonalityAssessment'))
+const SubjectAssessment = lazy(() => import('./pages/student/SubjectAssessment'))
+const CareerSuggestions = lazy(() => import('./pages/student/CareerSuggestions'))
+const MentalHealth = lazy(() => import('./pages/student/MentalHealth'))
+const AIWellbeingCheck = lazy(() => import('./pages/wellbeing/AIWellbeingCheck'))
+const StudentEvents = lazy(() => import('./pages/student/Events'))
+const TeacherEventsDashboard = lazy(() => import('./pages/teacher/EventsDashboard'))
+const ParentChildEvents = lazy(() => import('./pages/parent/ChildEvents'))
+const AuthorityEventsManagement = lazy(() => import('./pages/dashboard/AuthorityEventsManagement'))
+const OrganizerPortal = lazy(() => import('./pages/organizer/OrganizerPortal'))
+const EventDetailsPage = lazy(() => import('./pages/events/EventDetails'))
 
 function App() {
   return (
@@ -60,6 +64,7 @@ function App() {
               <ParentProvider>
                 <BrowserRouter>
                   <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+                <Suspense fallback={<PageLoader />}>
                 <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<Landing />} />
@@ -138,6 +143,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
                 <Route path="/events/:eventId" element={<EventDetailsPage />} />
               </Routes>
+              </Suspense>
                </BrowserRouter>
              </ParentProvider>
            </EventsProvider>
@@ -147,5 +153,5 @@ function App() {
     </ThemeProvider>
   )
 }
- 
+
 export default App
