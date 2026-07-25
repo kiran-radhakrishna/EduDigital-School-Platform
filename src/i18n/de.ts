@@ -119,6 +119,8 @@ const de: Translations = {
     teacher: 'Lehrer',
     parent: 'Elternteil',
     admin: 'Administrator',
+    authority: 'Behörde',
+    administrator: 'Administrator',
   },
   dashboard: {
     overview: 'Übersicht',

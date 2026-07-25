@@ -8,14 +8,17 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
+  Landmark,
   Lock,
   Mail,
   ShieldCheck,
+  Sparkles,
   Users,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
-import TryDemoSection from '../../components/demo/TryDemoSection'
+import { DEMO_PERSONAS, type DemoPersonaKey } from '../../data/demoUsers'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { UserRole } from '../../types'
@@ -41,15 +44,22 @@ type PrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const roleOptions: Array<{
-  value: UserRole
-  labelKey: 'student' | 'teacher' | 'parent' | 'admin'
-  icon: typeof GraduationCap
+  value: DemoPersonaKey
+  labelKey: 'student' | 'teacher' | 'parent' | 'authority' | 'administrator'
+  icon: LucideIcon
 }> = [
   { value: 'student', labelKey: 'student', icon: GraduationCap },
   { value: 'teacher', labelKey: 'teacher', icon: BookOpen },
   { value: 'parent', labelKey: 'parent', icon: Users },
-  { value: 'admin', labelKey: 'admin', icon: ShieldCheck },
+  { value: 'authority', labelKey: 'authority', icon: Landmark },
+  { value: 'administrator', labelKey: 'administrator', icon: ShieldCheck },
 ]
+
+// Authority and Administrator are both presented as separate login tabs, but
+// the app's real accounts only have a single 'admin' role under the hood.
+function tabToUserRole(tab: DemoPersonaKey): UserRole {
+  return tab === 'authority' || tab === 'administrator' ? 'admin' : tab
+}
 
 const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
   { label, error, leftIcon, rightIcon, className = '', id, ...props },
@@ -119,11 +129,33 @@ function PrimaryButton({
   )
 }
 
+function SecondaryButton({
+  children,
+  className = '',
+  disabled,
+  fullWidth,
+  type = 'button',
+  ...props
+}: PrimaryButtonProps) {
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border-2 border-indigo-200 bg-white px-4 py-3 text-sm font-semibold text-indigo-600 transition hover:border-indigo-400 hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-indigo-500/30 dark:bg-gray-900 dark:text-indigo-400 dark:hover:bg-indigo-500/10 dark:focus:ring-indigo-950 ${
+        fullWidth ? 'w-full' : ''
+      } ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function Login() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, loginDemo } = useAuth()
   const { t } = useLanguage()
-  const [selectedRole, setSelectedRole] = useState<UserRole>('student')
+  const [selectedTab, setSelectedTab] = useState<DemoPersonaKey>('student')
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -138,10 +170,11 @@ export default function Login() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    const role = tabToUserRole(selectedTab)
     try {
-      await login(data.email, data.password, selectedRole)
+      await login(data.email, data.password, role)
       toast.success('Welcome back!')
-      if (selectedRole === 'admin') {
+      if (role === 'admin') {
         navigate('/admin/dashboard')
       } else {
         navigate('/wellbeing-check')
@@ -149,6 +182,14 @@ export default function Login() {
     } catch {
       toast.error('Login failed. Please try again.')
     }
+  }
+
+  const handleTryDemo = () => {
+    const persona = DEMO_PERSONAS.find((candidate) => candidate.key === selectedTab)
+    if (!persona) return
+    loginDemo(selectedTab)
+    toast.success(`Exploring as ${persona.label} (Demo Mode)`)
+    navigate(persona.initialPath)
   }
 
   return (
@@ -179,15 +220,15 @@ export default function Login() {
               </p>
             </div>
 
-            <div className="mb-6 grid grid-cols-4 gap-2">
+            <div className="mb-6 grid grid-cols-5 gap-2">
               {roleOptions.map(({ value, labelKey, icon: Icon }) => {
-                const isActive = selectedRole === value
+                const isActive = selectedTab === value
 
                 return (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setSelectedRole(value)}
+                    onClick={() => setSelectedTab(value)}
                     className={`flex flex-col items-center gap-1 rounded-xl border-2 py-3 text-xs font-medium transition ${
                       isActive
                         ? 'border-indigo-600 bg-indigo-600 text-white'
@@ -248,6 +289,11 @@ export default function Login() {
                 </Link>
               </div>
 
+              <SecondaryButton fullWidth onClick={handleTryDemo}>
+                <Sparkles className="h-4 w-4" />
+                Try Demo
+              </SecondaryButton>
+
               <PrimaryButton type="submit" fullWidth isLoading={isSubmitting}>
                 {t.auth.signIn}
               </PrimaryButton>
@@ -263,8 +309,6 @@ export default function Login() {
               {t.auth.signUp}
             </Link>
           </p>
-
-          <TryDemoSection />
         </div>
       </div>
     </div>

@@ -116,6 +116,8 @@ const en = {
     teacher: 'Teacher',
     parent: 'Parent',
     admin: 'Admin',
+    authority: 'Authority',
+    administrator: 'Administrator',
   },
   dashboard: {
     overview: 'Overview',
