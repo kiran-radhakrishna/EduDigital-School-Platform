@@ -8,6 +8,7 @@ import {
 import { AuthContext } from './auth-context'
 import type { User, UserRole } from '../types'
 import { DEMO_PERSONAS, getDemoPersona, isDemoUserId, type DemoPersonaKey } from '../data/demoUsers'
+import { authApi } from '../services/authApi'
 
 const AUTH_STORAGE_KEY = 'auth_user'
 const roleValues: readonly UserRole[] = ['student', 'teacher', 'parent', 'admin']
@@ -125,13 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user))
   }, [user])
 
-  const login = useCallback(async (email: string, password: string, role: UserRole) => {
+  const login = useCallback(async (email: string, password: string) => {
     if (!email.trim()) throw new Error('Email is required.')
     if (!password.trim()) throw new Error('Password is required.')
-    if (!validRoles.has(role)) throw new Error('Invalid user role.')
 
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    setUser(buildUser(email, role))
+    const loggedInUser = await authApi.login(email, password)
+    setUser(normalizeUser(loggedInUser))
+    return loggedInUser
   }, [])
 
   const register = useCallback(
@@ -154,7 +155,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    setUser(null)
+    setUser((previousUser) => {
+      // Demo Mode never touches the backend — nothing to clear server-side.
+      if (previousUser && !isDemoUserId(previousUser.id)) {
+        void authApi.logout().catch(() => {})
+      }
+      return null
+    })
   }, [])
 
   const updateUser = useCallback((updates: Partial<User>) => {

@@ -21,7 +21,6 @@ import { z } from 'zod'
 import { DEMO_PERSONAS, type DemoPersonaKey } from '../../data/demoUsers'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
-import type { UserRole } from '../../types'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -54,12 +53,6 @@ const roleOptions: Array<{
   { value: 'authority', labelKey: 'authority', icon: Landmark },
   { value: 'administrator', labelKey: 'administrator', icon: ShieldCheck },
 ]
-
-// Authority and Administrator are both presented as separate login tabs, but
-// the app's real accounts only have a single 'admin' role under the hood.
-function tabToUserRole(tab: DemoPersonaKey): UserRole {
-  return tab === 'authority' || tab === 'administrator' ? 'admin' : tab
-}
 
 const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
   { label, error, leftIcon, rightIcon, className = '', id, ...props },
@@ -170,11 +163,10 @@ export default function Login() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
-    const role = tabToUserRole(selectedTab)
     try {
-      await login(data.email, data.password, role)
+      const loggedInUser = await login(data.email, data.password)
       toast.success('Welcome back!')
-      if (role === 'admin') {
+      if (loggedInUser.role === 'admin') {
         navigate('/admin/dashboard')
       } else {
         navigate('/wellbeing-check')

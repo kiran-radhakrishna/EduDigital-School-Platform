@@ -7,7 +7,7 @@ export interface AuthContextValue {
   isAuthenticated: boolean
   isDemoMode: boolean
   demoPersonaKey: DemoPersonaKey | null
-  login: (email: string, password: string, role: UserRole) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>
   loginDemo: (key: DemoPersonaKey) => void
   logout: () => void

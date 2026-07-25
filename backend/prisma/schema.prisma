@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  PARENT
+  AUTHORITY
+  ADMINISTRATOR
+}
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  country   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  students       Student[]
+  teachers       Teacher[]
+  parents        Parent[]
+  authorities    Authority[]
+  administrators Administrator[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
+
+  student       Student?
+  teacher       Teacher?
+  parent        Parent?
+  authority     Authority?
+  administrator Administrator?
+
+  @@index([schoolId])
+}
+
+model Student {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId    String?
+  school      School?  @relation(fields: [schoolId], references: [id])
+  grade       String
+  rollNumber  Int
+  dateOfBirth DateTime
+  createdAt   DateTime @default(now())
+
+  parents ParentStudent[]
+
+  @@index([schoolId])
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  subject   String
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+}
+
+model Parent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  phone     String?
+  createdAt DateTime @default(now())
+
+  children ParentStudent[]
+
+  @@index([schoolId])
+}
+
+model ParentStudent {
+  id        String  @id @default(cuid())
+  parentId  String
+  parent    Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+}
+
+model Authority {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  title     String
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+}
+
+model Administrator {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  title     String
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+}
