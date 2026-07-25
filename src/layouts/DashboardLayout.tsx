@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/dashboard/Sidebar'
 import Topbar from '../components/dashboard/Topbar'
+import DemoModeBanner from '../components/demo/DemoModeBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useWellbeing } from '../hooks/useWellbeing'
 
@@ -59,6 +60,7 @@ export default function DashboardLayout() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
+        <DemoModeBanner />
         <Topbar onMenuClick={() => setMobileOpen(true)} title={title} />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />

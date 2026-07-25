@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
+import TryDemoSection from '../../components/demo/TryDemoSection'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { UserRole } from '../../types'
@@ -262,6 +263,8 @@ export default function Login() {
               {t.auth.signUp}
             </Link>
           </p>
+
+          <TryDemoSection />
         </div>
       </div>
     </div>

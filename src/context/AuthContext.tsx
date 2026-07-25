@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { AuthContext } from './auth-context'
 import type { User, UserRole } from '../types'
+import { DEMO_PERSONAS, getDemoPersona, isDemoUserId, type DemoPersonaKey } from '../data/demoUsers'
 
 const AUTH_STORAGE_KEY = 'auth_user'
 const roleValues: readonly UserRole[] = ['student', 'teacher', 'parent', 'admin']
@@ -146,6 +147,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const loginDemo = useCallback((key: DemoPersonaKey) => {
+    const persona = getDemoPersona(key)
+    if (!persona) throw new Error(`Unknown demo persona: ${key}`)
+    setUser(normalizeUser(persona.user))
+  }, [])
+
   const logout = useCallback(() => {
     setUser(null)
   }, [])
@@ -161,16 +168,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const demoPersonaKey = useMemo<DemoPersonaKey | null>(() => {
+    if (!user || !isDemoUserId(user.id)) return null
+    return DEMO_PERSONAS.find((persona) => persona.user.id === user.id)?.key ?? null
+  }, [user])
+
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: user !== null,
+      isDemoMode: demoPersonaKey !== null,
+      demoPersonaKey,
       login,
       register,
+      loginDemo,
       logout,
       updateUser,
     }),
-    [login, logout, register, updateUser, user],
+    [demoPersonaKey, login, loginDemo, logout, register, updateUser, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

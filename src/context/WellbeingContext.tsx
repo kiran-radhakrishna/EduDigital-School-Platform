@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { WellbeingContext } from './wellbeing-context'
 import { useAuth } from '../hooks/useAuth'
 import type { UserRole } from '../types'
+import { isDemoUserId } from '../data/demoUsers'
 import { isWellbeingEmotion, type WellbeingAssessment, type WellbeingEmotion } from '../types/wellbeing'
 
 const WELLBEING_RECORDS_STORAGE_KEY = 'wellbeing_records'
@@ -77,7 +78,9 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
 
   const skippedToday = userId ? (skipsByUser[userId] ?? []).includes(todayKey) : false
   const requiresWellbeing = user ? ROLES_REQUIRING_WELLBEING.has(user.role) : false
-  const shouldShowWellbeingCheck = !!user && requiresWellbeing && !completedToday && !skippedToday
+  const isDemoUser = userId !== null && isDemoUserId(userId)
+  const shouldShowWellbeingCheck =
+    !!user && requiresWellbeing && !completedToday && !skippedToday && !isDemoUser
 
   const persistRecords = useCallback((nextRecordsByUser: WellbeingRecordMap) => {
     setRecordsByUser(nextRecordsByUser)
