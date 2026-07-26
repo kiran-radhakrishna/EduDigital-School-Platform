@@ -29,6 +29,86 @@ model School {
   parents        Parent[]
   authorities    Authority[]
   administrators Administrator[]
+  academicYears  AcademicYear[]
+  subjects       Subject[]
+  classes        SchoolClass[]
+}
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  classes SchoolClass[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model Subject {
+  id       String  @id @default(cuid())
+  schoolId String
+  school   School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name     String
+  code     String?
+
+  classAssignments ClassAssignment[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model SchoolClass {
+  id                String       @id @default(cuid())
+  schoolId          String
+  school            School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  academicYearId    String
+  academicYear      AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  name              String
+  grade             String
+  section           String
+  homeroomTeacherId String?
+  homeroomTeacher   Teacher?     @relation(fields: [homeroomTeacherId], references: [id])
+  createdAt         DateTime     @default(now())
+
+  enrollments     Enrollment[]
+  classAssignments ClassAssignment[]
+
+  @@unique([schoolId, academicYearId, name])
+  @@index([schoolId])
+  @@index([academicYearId])
+  @@index([homeroomTeacherId])
+}
+
+model ClassAssignment {
+  id        String      @id @default(cuid())
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([classId, subjectId])
+  @@index([teacherId])
+}
+
+model Enrollment {
+  id        String      @id @default(cuid())
+  studentId String
+  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([studentId, classId])
+  @@index([classId])
 }
 
 model User {
@@ -64,7 +144,8 @@ model Student {
   dateOfBirth DateTime
   createdAt   DateTime @default(now())
 
-  parents ParentStudent[]
+  parents     ParentStudent[]
+  enrollments Enrollment[]
 
   @@index([schoolId])
 }
@@ -77,6 +158,9 @@ model Teacher {
   school    School?  @relation(fields: [schoolId], references: [id])
   subject   String
   createdAt DateTime @default(now())
+
+  classAssignments ClassAssignment[]
+  homeroomClasses  SchoolClass[]
 
   @@index([schoolId])
 }
