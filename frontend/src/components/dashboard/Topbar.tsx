@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { Bell, GraduationCap, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-react'
@@ -6,6 +6,7 @@ import { Avatar } from '../common/Avatar'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useTheme } from '../../hooks/useTheme'
+import { notificationApi } from '../../services/notificationApi'
 import { STUDENT_INFO } from '../../data/studentData'
 
 export interface TopbarProps {
@@ -14,15 +15,32 @@ export interface TopbarProps {
 }
 
 export default function Topbar({ onMenuClick, title }: TopbarProps) {
-  const { user, logout } = useAuth()
+  const { user, logout, isDemoMode } = useAuth()
   const { t, lang, setLang } = useLanguage()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [hasUnread, setHasUnread] = useState(isDemoMode)
+
+  useEffect(() => {
+    // Demo Mode never touches the backend — it keeps the existing static indicator.
+    if (isDemoMode || !user) return
+
+    let cancelled = false
+    notificationApi
+      .unreadCount()
+      .then((count) => {
+        if (!cancelled) setHasUnread(count > 0)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [isDemoMode, user])
 
   if (!user) return null
 
-  const hasUnread = true
   const resolvedTitle = title ?? t.dashboard.overview
   const basePath = `/${user.role}`
   const isStudent = user.role === 'student'

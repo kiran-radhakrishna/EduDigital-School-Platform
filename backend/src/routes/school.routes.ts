@@ -20,3 +20,9 @@ schoolRouter.post(
   authorize('ADMINISTRATOR'),
   asyncHandler(schoolController.createAcademicYear),
 )
+
+schoolRouter.get(
+  '/:id/analytics',
+  authorize('ADMINISTRATOR', 'AUTHORITY'),
+  asyncHandler(schoolController.getAnalytics),
+)

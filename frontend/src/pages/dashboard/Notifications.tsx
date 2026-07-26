@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertCircle, AlertTriangle, Bell, CheckCircle, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Card } from '../../components/common/Card'
 import { Button } from '../../components/common/Button'
+import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { notificationApi } from '../../services/notificationApi'
 import { cn, formatDate } from '../../utils/helpers'
 import type { Notification as AppNotification } from '../../types'
 
@@ -40,8 +42,26 @@ const notificationStyles = {
 
 export default function Notifications() {
   const { t } = useLanguage()
+  const { isDemoMode } = useAuth()
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
-  const [notifications, setNotifications] = useState(initialNotifications)
+  const [notifications, setNotifications] = useState<AppNotification[]>(isDemoMode ? initialNotifications : [])
+
+  useEffect(() => {
+    // Demo Mode never touches the backend — it keeps its own static sample data.
+    if (isDemoMode) return
+
+    let cancelled = false
+    notificationApi
+      .list()
+      .then((items) => {
+        if (!cancelled) setNotifications(items)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [isDemoMode])
 
   const filteredNotifications = useMemo(
     () => notifications.filter((item) => (filter === 'all' ? true : !item.read)),
@@ -50,6 +70,7 @@ export default function Notifications() {
 
   const markAllAsRead = () => {
     setNotifications((current) => current.map((item) => ({ ...item, read: true })))
+    if (!isDemoMode) void notificationApi.markAllAsRead().catch(() => {})
     toast.success('All notifications marked as read')
   }
 
@@ -57,6 +78,7 @@ export default function Notifications() {
     setNotifications((current) =>
       current.map((item) => (item.id === id && !item.read ? { ...item, read: true } : item)),
     )
+    if (!isDemoMode) void notificationApi.markAsRead(id).catch(() => {})
   }
 
   return (

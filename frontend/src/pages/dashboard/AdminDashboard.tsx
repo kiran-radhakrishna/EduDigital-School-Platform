@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, CalendarCheck, GraduationCap, Users } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -7,9 +8,41 @@ import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
 import { StatCard } from '../../components/common/StatCard'
 import { useAuth } from '../../hooks/useAuth'
+import { analyticsApi } from '../../services/analyticsApi'
 import { getCurrentUserIdentity } from '../../utils/helpers'
 
-const enrollmentByGrade = [
+interface EnrollmentPoint {
+  grade: string
+  students: number
+}
+
+interface AttendancePoint {
+  month: string
+  attendance: number
+}
+
+interface WellbeingPoint {
+  grade: string
+  happy: number
+  neutral: number
+  support: number
+}
+
+interface RegistrationRow {
+  id: string
+  name: string
+  role: string
+  joinedAt: string
+}
+
+interface DashboardTotals {
+  students: number
+  teachers: number
+  classes: number
+  attendance: number
+}
+
+const DEMO_ENROLLMENT: EnrollmentPoint[] = [
   { grade: 'Grade 1', students: 92 },
   { grade: 'Grade 2', students: 98 },
   { grade: 'Grade 3', students: 101 },
@@ -24,7 +57,7 @@ const enrollmentByGrade = [
   { grade: 'Grade 12', students: 107 },
 ]
 
-const attendanceTrend = [
+const DEMO_ATTENDANCE_TREND: AttendancePoint[] = [
   { month: 'Feb', attendance: 91.5 },
   { month: 'Mar', attendance: 92.1 },
   { month: 'Apr', attendance: 92.8 },
@@ -33,19 +66,21 @@ const attendanceTrend = [
   { month: 'Jul', attendance: 93.6 },
 ]
 
-const wellbeingByGrade = [
-  { grade: 'Grade 4', happy: 74, focused: 16, support: 10 },
-  { grade: 'Grade 5', happy: 61, focused: 23, support: 16 },
-  { grade: 'Grade 6', happy: 69, focused: 19, support: 12 },
+const DEMO_WELLBEING: WellbeingPoint[] = [
+  { grade: 'Grade 4', happy: 74, neutral: 16, support: 10 },
+  { grade: 'Grade 5', happy: 61, neutral: 23, support: 16 },
+  { grade: 'Grade 6', happy: 69, neutral: 19, support: 12 },
 ]
 
-const recentRegistrations = [
+const DEMO_REGISTRATIONS: RegistrationRow[] = [
   { id: 'registration-1', name: 'Liam Turner', role: 'Student', joinedAt: '2026-07-02' },
   { id: 'registration-2', name: 'Ava Collins', role: 'Teacher', joinedAt: '2026-07-01' },
   { id: 'registration-3', name: 'Noah Rivera', role: 'Student', joinedAt: '2026-06-30' },
   { id: 'registration-4', name: 'Mia Sullivan', role: 'Student', joinedAt: '2026-06-29' },
   { id: 'registration-5', name: 'Ethan Brooks', role: 'Teacher', joinedAt: '2026-06-28' },
 ]
+
+const DEMO_TOTALS: DashboardTotals = { students: 1248, teachers: 84, classes: 42, attendance: 93 }
 
 const systemNotices = [
   {
@@ -68,6 +103,27 @@ const systemNotices = [
   },
 ]
 
+function formatRole(role: string): string {
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
+}
+
+function toWellbeingPercentages(entry: {
+  grade: string
+  happy: number
+  neutral: number
+  needsSupport: number
+}): WellbeingPoint {
+  const total = entry.happy + entry.neutral + entry.needsSupport
+  if (total === 0) return { grade: entry.grade, happy: 0, neutral: 0, support: 0 }
+
+  return {
+    grade: entry.grade,
+    happy: Math.round((entry.happy / total) * 100),
+    neutral: Math.round((entry.neutral / total) * 100),
+    support: Math.round((entry.needsSupport / total) * 100),
+  }
+}
+
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -76,8 +132,59 @@ const formatDate = (value: string) =>
   }).format(new Date(value))
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
+  const { user, isDemoMode } = useAuth()
   const currentUser = getCurrentUserIdentity(user, 'admin')
+
+  const [enrollmentByGrade, setEnrollmentByGrade] = useState<EnrollmentPoint[]>(
+    isDemoMode ? DEMO_ENROLLMENT : [],
+  )
+  const [attendanceTrend, setAttendanceTrend] = useState<AttendancePoint[]>(
+    isDemoMode ? DEMO_ATTENDANCE_TREND : [],
+  )
+  const [wellbeingByGrade, setWellbeingByGrade] = useState<WellbeingPoint[]>(
+    isDemoMode ? DEMO_WELLBEING : [],
+  )
+  const [recentRegistrations, setRecentRegistrations] = useState<RegistrationRow[]>(
+    isDemoMode ? DEMO_REGISTRATIONS : [],
+  )
+  const [totals, setTotals] = useState<DashboardTotals>(isDemoMode ? DEMO_TOTALS : { students: 0, teachers: 0, classes: 0, attendance: 0 })
+
+  useEffect(() => {
+    // Demo Mode never touches the backend — it keeps its own static sample data.
+    if (isDemoMode) return
+
+    let cancelled = false
+    analyticsApi
+      .getMySchoolAnalytics()
+      .then((analytics) => {
+        if (cancelled) return
+
+        setEnrollmentByGrade(analytics.enrollmentByGrade)
+        setAttendanceTrend(
+          analytics.attendanceTrend.map((point) => ({ month: point.month, attendance: point.attendancePercentage })),
+        )
+        setWellbeingByGrade(analytics.wellbeingByGrade.map(toWellbeingPercentages))
+        setRecentRegistrations(
+          analytics.recentRegistrations.map((registration) => ({
+            ...registration,
+            role: formatRole(registration.role),
+          })),
+        )
+
+        const latestAttendance = analytics.attendanceTrend.at(-1)?.attendancePercentage ?? 0
+        setTotals({
+          students: analytics.totals.students,
+          teachers: analytics.totals.teachers,
+          classes: analytics.totals.classes,
+          attendance: latestAttendance,
+        })
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [isDemoMode])
 
   return (
     <motion.div
@@ -96,10 +203,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Users size={20} />} title="Total Students" value="1,248" change={3.2} trend="up" />
-        <StatCard icon={<GraduationCap size={20} />} title="Total Teachers" value={84} change={1.1} trend="up" />
-        <StatCard icon={<BookOpen size={20} />} title="Total Classes" value={42} />
-        <StatCard icon={<CalendarCheck size={20} />} title="School Attendance" value="93%" change={0.8} trend="up" />
+        <StatCard icon={<Users size={20} />} title="Total Students" value={totals.students.toLocaleString()} />
+        <StatCard icon={<GraduationCap size={20} />} title="Total Teachers" value={totals.teachers} />
+        <StatCard icon={<BookOpen size={20} />} title="Total Classes" value={totals.classes} />
+        <StatCard icon={<CalendarCheck size={20} />} title="School Attendance" value={`${totals.attendance}%`} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -125,7 +232,7 @@ export default function AdminDashboard() {
               <LineChart data={attendanceTrend}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
                 <XAxis dataKey="month" />
-                <YAxis domain={[85, 100]} />
+                <YAxis domain={[0, 100]} />
                 <Tooltip />
                 <Line type="monotone" dataKey="attendance" stroke="#22c55e" strokeWidth={2} />
               </LineChart>
@@ -156,7 +263,7 @@ export default function AdminDashboard() {
                     Happy {entry.happy}%
                   </p>
                   <p className="rounded-lg bg-blue-50 px-2 py-1 text-center font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-                    Focused {entry.focused}%
+                    Neutral {entry.neutral}%
                   </p>
                   <p className="rounded-lg bg-amber-50 px-2 py-1 text-center font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                     Support {entry.support}%
@@ -164,6 +271,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ))}
+            {wellbeingByGrade.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">No wellbeing check-ins recorded yet.</p>
+            )}
           </div>
         </div>
       </Card>
@@ -187,6 +297,9 @@ export default function AdminDashboard() {
               </Badge>
             </div>
           ))}
+          {recentRegistrations.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No recent registrations.</p>
+          )}
         </div>
       </Card>
 

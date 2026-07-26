@@ -43,6 +43,24 @@ enum Weekday {
   FRI
 }
 
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
+enum WellbeingEmotion {
+  HAPPY
+  FOCUSED
+  CALM
+  NEUTRAL
+  TIRED
+  SAD
+  STRESSED
+  ANXIOUS
+}
+
 model School {
   id        String   @id @default(cuid())
   name      String
@@ -225,6 +243,42 @@ model Grade {
   @@index([classId])
 }
 
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(INFO)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+model WellbeingCheckIn {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emotion    WellbeingEmotion
+  confidence Int
+  source     String           @default("manual")
+  createdAt  DateTime         @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model WellbeingSkip {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
 model TimetableSlot {
   id        String      @id @default(cuid())
   classId   String
@@ -261,6 +315,10 @@ model User {
   parent        Parent?
   authority     Authority?
   administrator Administrator?
+
+  notifications     Notification[]
+  wellbeingCheckIns WellbeingCheckIn[]
+  wellbeingSkips    WellbeingSkip[]
 
   @@index([schoolId])
 }

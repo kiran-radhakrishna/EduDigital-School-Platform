@@ -27,6 +27,7 @@ interface SeedUserInput {
   firstName: string
   lastName: string
   role: UserRole
+  schoolId: string
 }
 
 async function upsertUser(input: SeedUserInput, passwordHash: string) {
@@ -36,12 +37,14 @@ async function upsertUser(input: SeedUserInput, passwordHash: string) {
       firstName: input.firstName,
       lastName: input.lastName,
       role: input.role,
+      schoolId: input.schoolId,
     },
     create: {
       email: input.email,
       firstName: input.firstName,
       lastName: input.lastName,
       role: input.role,
+      schoolId: input.schoolId,
       passwordHash,
     },
   })
@@ -63,7 +66,13 @@ async function main() {
 
   // ── Administrator ──────────────────────────────────────────────────────
   const adminUser = await upsertUser(
-    { email: 'claudia.richter@dis.edu', firstName: 'Claudia', lastName: 'Richter', role: 'ADMINISTRATOR' },
+    {
+      email: 'claudia.richter@dis.edu',
+      firstName: 'Claudia',
+      lastName: 'Richter',
+      role: 'ADMINISTRATOR',
+      schoolId: school.id,
+    },
     passwordHash,
   )
   await prisma.administrator.upsert({
@@ -78,7 +87,13 @@ async function main() {
 
   // ── Authority ───────────────────────────────────────────────────────────
   const authorityUser = await upsertUser(
-    { email: 'andreas.wolff@dis.edu', firstName: 'Andreas', lastName: 'Wolff', role: 'AUTHORITY' },
+    {
+      email: 'andreas.wolff@dis.edu',
+      firstName: 'Andreas',
+      lastName: 'Wolff',
+      role: 'AUTHORITY',
+      schoolId: school.id,
+    },
     passwordHash,
   )
   await prisma.authority.upsert({
@@ -101,7 +116,13 @@ async function main() {
   for (const teacherInput of teacherInputs) {
     const email = `${toEmailSlug(teacherInput.firstName)}.${toEmailSlug(teacherInput.lastName)}@dis.edu`
     const teacherUser = await upsertUser(
-      { email, firstName: teacherInput.firstName, lastName: teacherInput.lastName, role: 'TEACHER' },
+      {
+        email,
+        firstName: teacherInput.firstName,
+        lastName: teacherInput.lastName,
+        role: 'TEACHER',
+        schoolId: school.id,
+      },
       passwordHash,
     )
     await prisma.teacher.upsert({
@@ -170,6 +191,7 @@ async function main() {
         firstName: family.student.firstName,
         lastName: family.student.lastName,
         role: 'STUDENT',
+        schoolId: school.id,
       },
       passwordHash,
     )
@@ -187,7 +209,13 @@ async function main() {
 
     const parentEmail = `${toEmailSlug(family.parent.firstName)}.${toEmailSlug(family.parent.lastName)}@dis.edu`
     const parentUser = await upsertUser(
-      { email: parentEmail, firstName: family.parent.firstName, lastName: family.parent.lastName, role: 'PARENT' },
+      {
+        email: parentEmail,
+        firstName: family.parent.firstName,
+        lastName: family.parent.lastName,
+        role: 'PARENT',
+        schoolId: school.id,
+      },
       passwordHash,
     )
     const parent = await prisma.parent.upsert({

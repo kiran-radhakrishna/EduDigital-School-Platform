@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { parseOrThrow } from '../utils/validate'
 import * as schoolService from '../services/school.service'
+import * as analyticsService from '../services/analytics.service'
 
 export async function list(_req: Request, res: Response): Promise<void> {
   const schools = await schoolService.listSchools()
@@ -58,4 +59,9 @@ export async function createAcademicYear(req: Request, res: Response): Promise<v
   const input = parseOrThrow(createAcademicYearSchema, req.body)
   const academicYear = await schoolService.createAcademicYear(req.params.id, input)
   res.status(201).json({ academicYear })
+}
+
+export async function getAnalytics(req: Request, res: Response): Promise<void> {
+  const analytics = await analyticsService.getSchoolAnalytics(req.params.id)
+  res.status(200).json({ analytics })
 }

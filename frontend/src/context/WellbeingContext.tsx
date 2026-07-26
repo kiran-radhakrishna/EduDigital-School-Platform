@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { WellbeingContext } from './wellbeing-context'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { WellbeingContext, type WellbeingContextValue } from './wellbeing-context'
 import { useAuth } from '../hooks/useAuth'
 import type { UserRole } from '../types'
-import { isDemoUserId } from '../data/demoUsers'
+import { wellbeingApi } from '../services/wellbeingApi'
 import { isWellbeingEmotion, type WellbeingAssessment, type WellbeingEmotion } from '../types/wellbeing'
 
 const WELLBEING_RECORDS_STORAGE_KEY = 'wellbeing_records'
@@ -59,8 +59,11 @@ function getLatestValidAssessment(records: WellbeingAssessment[]): WellbeingAsse
   )
 }
 
-export function WellbeingProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+/**
+ * Demo Mode's wellbeing state — pure client-side localStorage, exactly as before.
+ * Demo Mode must never touch the backend, so this provider makes zero API calls.
+ */
+function DemoWellbeingProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const [recordsByUser, setRecordsByUser] = useState<WellbeingRecordMap>(() =>
     parseStoredMap<WellbeingRecordMap>(WELLBEING_RECORDS_STORAGE_KEY),
   )
@@ -68,19 +71,16 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
     parseStoredMap<WellbeingSkipMap>(WELLBEING_SKIPS_STORAGE_KEY),
   )
 
-  const userId = user?.id ?? null
   const todayKey = getDateKey(new Date())
-  const userRecords = userId ? recordsByUser[userId] ?? [] : []
+  const userRecords = recordsByUser[userId] ?? []
   const latestAssessment = getLatestValidAssessment(userRecords)
 
   const completedToday =
     latestAssessment !== null && getDateKey(new Date(latestAssessment.timestamp)) === todayKey
 
-  const skippedToday = userId ? (skipsByUser[userId] ?? []).includes(todayKey) : false
-  const requiresWellbeing = user ? ROLES_REQUIRING_WELLBEING.has(user.role) : false
-  const isDemoUser = userId !== null && isDemoUserId(userId)
-  const shouldShowWellbeingCheck =
-    !!user && requiresWellbeing && !completedToday && !skippedToday && !isDemoUser
+  const skippedToday = (skipsByUser[userId] ?? []).includes(todayKey)
+  // Demo Mode always bypasses the wellbeing check, matching the existing behavior.
+  const shouldShowWellbeingCheck = false
 
   const persistRecords = useCallback((nextRecordsByUser: WellbeingRecordMap) => {
     setRecordsByUser(nextRecordsByUser)
@@ -93,21 +93,13 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const removeTodaySkip = useCallback(() => {
-    if (!userId) return
-
     const skips = skipsByUser[userId] ?? []
     const nextSkips = skips.filter((entry) => entry !== todayKey)
-
-    persistSkips({
-      ...skipsByUser,
-      [userId]: nextSkips,
-    })
+    persistSkips({ ...skipsByUser, [userId]: nextSkips })
   }, [persistSkips, skipsByUser, todayKey, userId])
 
   const saveCameraAssessment = useCallback(
     (emotion: WellbeingEmotion, confidence: number) => {
-      if (!userId) return
-
       const safeConfidence = Math.min(100, Math.max(0, Math.round(confidence)))
       const assessment: WellbeingAssessment = {
         emotion,
@@ -116,10 +108,7 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
       }
 
       const currentRecords = recordsByUser[userId] ?? []
-      persistRecords({
-        ...recordsByUser,
-        [userId]: [...currentRecords, assessment],
-      })
+      persistRecords({ ...recordsByUser, [userId]: [...currentRecords, assessment] })
       removeTodaySkip()
     },
     [persistRecords, recordsByUser, removeTodaySkip, userId],
@@ -144,18 +133,12 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
   )
 
   const skipToday = useCallback(() => {
-    if (!userId) return
-
     const current = skipsByUser[userId] ?? []
     if (current.includes(todayKey)) return
-
-    persistSkips({
-      ...skipsByUser,
-      [userId]: [...current, todayKey],
-    })
+    persistSkips({ ...skipsByUser, [userId]: [...current, todayKey] })
   }, [persistSkips, skipsByUser, todayKey, userId])
 
-  const value = useMemo(
+  const value = useMemo<WellbeingContextValue>(
     () => ({
       latestAssessment,
       completedToday,
@@ -165,16 +148,123 @@ export function WellbeingProvider({ children }: { children: ReactNode }) {
       saveManualAssessment,
       skipToday,
     }),
-    [
-      completedToday,
-      latestAssessment,
-      saveCameraAssessment,
-      saveManualAssessment,
-      shouldShowWellbeingCheck,
-      skipToday,
-      skippedToday,
-    ],
+    [completedToday, latestAssessment, saveCameraAssessment, saveManualAssessment, shouldShowWellbeingCheck, skipToday, skippedToday],
   )
 
   return <WellbeingContext.Provider value={value}>{children}</WellbeingContext.Provider>
+}
+
+/** Real users' wellbeing state — backed by PostgreSQL via /wellbeing/*. */
+function RealWellbeingProvider({ role, children }: { role: UserRole; children: ReactNode }) {
+  const [latestAssessment, setLatestAssessment] = useState<WellbeingAssessment | null>(null)
+  const [completedToday, setCompletedToday] = useState(false)
+  const [skippedToday, setSkippedToday] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    wellbeingApi
+      .getStatus()
+      .then((status) => {
+        if (cancelled) return
+        setLatestAssessment(status.latestAssessment)
+        setCompletedToday(status.completedToday)
+        setSkippedToday(status.skippedToday)
+      })
+      .catch(() => {
+        // Leave defaults (not completed, not skipped) so the check still surfaces.
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const requiresWellbeing = ROLES_REQUIRING_WELLBEING.has(role)
+  const shouldShowWellbeingCheck = isLoaded && requiresWellbeing && !completedToday && !skippedToday
+
+  const saveCameraAssessment = useCallback((emotion: WellbeingEmotion, confidence: number) => {
+    void wellbeingApi
+      .createCheckIn(emotion, confidence, 'camera')
+      .then((status) => {
+        setLatestAssessment(status.latestAssessment)
+        setCompletedToday(status.completedToday)
+        setSkippedToday(status.skippedToday)
+      })
+      .catch(() => {})
+  }, [])
+
+  const saveManualAssessment = useCallback((emotion: WellbeingEmotion) => {
+    const manualConfidence: Record<WellbeingEmotion, number> = {
+      happy: 92,
+      focused: 91,
+      calm: 90,
+      neutral: 88,
+      tired: 87,
+      sad: 86,
+      stressed: 89,
+      anxious: 89,
+    }
+
+    void wellbeingApi
+      .createCheckIn(emotion, manualConfidence[emotion], 'manual')
+      .then((status) => {
+        setLatestAssessment(status.latestAssessment)
+        setCompletedToday(status.completedToday)
+        setSkippedToday(status.skippedToday)
+      })
+      .catch(() => {})
+  }, [])
+
+  const skipToday = useCallback(() => {
+    void wellbeingApi
+      .skipToday()
+      .then((status) => {
+        setSkippedToday(status.skippedToday)
+      })
+      .catch(() => {})
+  }, [])
+
+  const value = useMemo<WellbeingContextValue>(
+    () => ({
+      latestAssessment,
+      completedToday,
+      skippedToday,
+      shouldShowWellbeingCheck,
+      saveCameraAssessment,
+      saveManualAssessment,
+      skipToday,
+    }),
+    [completedToday, latestAssessment, saveCameraAssessment, saveManualAssessment, shouldShowWellbeingCheck, skipToday, skippedToday],
+  )
+
+  return <WellbeingContext.Provider value={value}>{children}</WellbeingContext.Provider>
+}
+
+const INACTIVE_VALUE: WellbeingContextValue = {
+  latestAssessment: null,
+  completedToday: false,
+  skippedToday: false,
+  shouldShowWellbeingCheck: false,
+  saveCameraAssessment: () => {},
+  saveManualAssessment: () => {},
+  skipToday: () => {},
+}
+
+export function WellbeingProvider({ children }: { children: ReactNode }) {
+  const { user, isDemoMode } = useAuth()
+
+  if (!user) {
+    return <WellbeingContext.Provider value={INACTIVE_VALUE}>{children}</WellbeingContext.Provider>
+  }
+
+  if (isDemoMode) {
+    return <DemoWellbeingProvider userId={user.id}>{children}</DemoWellbeingProvider>
+  }
+
+  return <RealWellbeingProvider role={user.role}>{children}</RealWellbeingProvider>
 }
