@@ -1,23 +1,6 @@
 import { prisma } from '../config/prisma'
 import { ConflictError, NotFoundError } from '../utils/errors'
-
-// The public API is keyed by User.id everywhere (it's the only id the frontend
-// has post-auth). These resolve a User.id to the internal Teacher/Student row id.
-async function resolveTeacherId(teacherUserId: string): Promise<string> {
-  const teacher = await prisma.teacher.findUnique({ where: { userId: teacherUserId } })
-  if (!teacher) {
-    throw new NotFoundError('Teacher not found.')
-  }
-  return teacher.id
-}
-
-async function resolveStudentId(studentUserId: string): Promise<string> {
-  const student = await prisma.student.findUnique({ where: { userId: studentUserId } })
-  if (!student) {
-    throw new NotFoundError('Student not found.')
-  }
-  return student.id
-}
+import { resolveStudentId, resolveTeacherId, safeUserSelect } from './resolvers'
 
 export interface CreateSubjectInput {
   schoolId: string
@@ -39,16 +22,6 @@ export async function createSubject(input: CreateSubjectInput) {
     data: { schoolId: input.schoolId, name: input.name.trim(), code: input.code },
   })
 }
-
-// Never `include: { user: true }` on a nested relation — that pulls passwordHash
-// along with it. Always select only the safe, public user fields.
-const safeUserSelect = {
-  id: true,
-  firstName: true,
-  lastName: true,
-  email: true,
-  role: true,
-} as const
 
 const classInclude = {
   academicYear: true,

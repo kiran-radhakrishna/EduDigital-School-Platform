@@ -1,22 +1,7 @@
 import { prisma } from '../config/prisma'
-import { ConflictError, NotFoundError } from '../utils/errors'
+import { ConflictError } from '../utils/errors'
 import { profileInclude, toSafeUser, type SafeUser } from './userMapper'
-
-async function resolveParentId(parentUserId: string): Promise<string> {
-  const parent = await prisma.parent.findUnique({ where: { userId: parentUserId } })
-  if (!parent) {
-    throw new NotFoundError('Parent not found.')
-  }
-  return parent.id
-}
-
-async function resolveStudentId(studentUserId: string): Promise<string> {
-  const student = await prisma.student.findUnique({ where: { userId: studentUserId } })
-  if (!student) {
-    throw new NotFoundError('Student not found.')
-  }
-  return student.id
-}
+import { resolveParentId, resolveStudentId } from './resolvers'
 
 /** `parentUserId` — the parent's User.id. Returns the linked children as SafeUser objects. */
 export async function getChildren(parentUserId: string): Promise<SafeUser[]> {

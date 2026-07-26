@@ -15,6 +15,34 @@ enum UserRole {
   ADMINISTRATOR
 }
 
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+}
+
+enum GradeType {
+  ASSIGNMENT
+  EXAM
+  PROJECT
+  PARTICIPATION
+}
+
+enum Weekday {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+}
+
 model School {
   id        String   @id @default(cuid())
   name      String
@@ -58,6 +86,9 @@ model Subject {
   code     String?
 
   classAssignments ClassAssignment[]
+  assignments      Assignment[]
+  grades           Grade[]
+  timetableSlots   TimetableSlot[]
 
   @@unique([schoolId, name])
   @@index([schoolId])
@@ -76,8 +107,12 @@ model SchoolClass {
   homeroomTeacher   Teacher?     @relation(fields: [homeroomTeacherId], references: [id])
   createdAt         DateTime     @default(now())
 
-  enrollments     Enrollment[]
-  classAssignments ClassAssignment[]
+  enrollments       Enrollment[]
+  classAssignments  ClassAssignment[]
+  attendanceRecords AttendanceRecord[]
+  assignments       Assignment[]
+  grades            Grade[]
+  timetableSlots    TimetableSlot[]
 
   @@unique([schoolId, academicYearId, name])
   @@index([schoolId])
@@ -109,6 +144,103 @@ model Enrollment {
 
   @@unique([studentId, classId])
   @@index([classId])
+}
+
+model AttendanceRecord {
+  id           String           @id @default(cuid())
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId      String
+  class        SchoolClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  date         DateTime         @db.Date
+  status       AttendanceStatus
+  reason       String?
+  recordedById String?
+  recordedBy   Teacher?         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([studentId, classId, date])
+  @@index([classId, date])
+  @@index([studentId])
+}
+
+model Assignment {
+  id          String      @id @default(cuid())
+  classId     String
+  class       SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId   String
+  teacher     Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime
+  maxScore    Int         @default(100)
+  createdAt   DateTime    @default(now())
+
+  submissions AssignmentSubmission[]
+
+  @@index([classId])
+  @@index([subjectId])
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status       SubmissionStatus @default(PENDING)
+  submittedAt  DateTime?
+  content      String?
+  score        Int?
+  feedback     String?
+  gradedAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+}
+
+model Grade {
+  id        String      @id @default(cuid())
+  studentId String
+  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  type      GradeType
+  title     String
+  score     Float
+  maxScore  Float
+  date      DateTime    @db.Date
+  createdAt DateTime    @default(now())
+
+  @@index([studentId])
+  @@index([classId])
+}
+
+model TimetableSlot {
+  id        String      @id @default(cuid())
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  day       Weekday
+  startTime String
+  endTime   String
+  room      String?
+  createdAt DateTime    @default(now())
+
+  @@index([classId])
+  @@index([teacherId])
 }
 
 model User {
@@ -144,8 +276,11 @@ model Student {
   dateOfBirth DateTime
   createdAt   DateTime @default(now())
 
-  parents     ParentStudent[]
-  enrollments Enrollment[]
+  parents           ParentStudent[]
+  enrollments       Enrollment[]
+  attendanceRecords AttendanceRecord[]
+  submissions       AssignmentSubmission[]
+  grades            Grade[]
 
   @@index([schoolId])
 }
@@ -159,8 +294,12 @@ model Teacher {
   subject   String
   createdAt DateTime @default(now())
 
-  classAssignments ClassAssignment[]
-  homeroomClasses  SchoolClass[]
+  classAssignments   ClassAssignment[]
+  homeroomClasses    SchoolClass[]
+  recordedAttendance AttendanceRecord[]
+  assignments        Assignment[]
+  grades             Grade[]
+  timetableSlots     TimetableSlot[]
 
   @@index([schoolId])
 }
