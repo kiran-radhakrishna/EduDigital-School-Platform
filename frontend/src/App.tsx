@@ -23,6 +23,8 @@ const StudentDashboard = lazy(() => import('./pages/dashboard/StudentDashboard')
 const TeacherDashboard = lazy(() => import('./pages/teacher/Dashboard'))
 const ClassWorkspace = lazy(() => import('./pages/teacher/ClassWorkspace'))
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'))
+const AdminSchools = lazy(() => import('./pages/admin/Schools'))
+const AdminUsers = lazy(() => import('./pages/admin/Users'))
 const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'))
 const ChildDashboard = lazy(() => import('./pages/parent/ChildDashboard'))
 
@@ -131,6 +133,8 @@ function App() {
               {/* Admin routes */}
               <Route path="/admin" element={<DashboardLayout />}>
                 <Route path="dashboard"     element={<AdminDashboard />} />
+                <Route path="schools"       element={<AdminSchools />} />
+                <Route path="users"         element={<AdminUsers />} />
                 <Route path="subjects"      element={<Subjects />} />
                 <Route path="events"        element={<AuthorityEventsManagement />} />
                 <Route path="notifications" element={<Notifications />} />

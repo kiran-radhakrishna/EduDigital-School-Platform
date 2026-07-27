@@ -8,6 +8,7 @@ import {
   Bot,
   Brain,
   Briefcase,
+  Building2,
   Calendar,
   CalendarCheck,
   ChevronLeft,
@@ -24,6 +25,7 @@ import {
   Ticket,
   Trophy,
   User,
+  Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { User as AppUser } from '../../types'
@@ -140,6 +142,8 @@ function getAdminNav(t: ReturnType<typeof useLanguage>['t']): SidebarSection[] {
     {
       items: [
         { label: t.dashboard.overview,      path: '/admin/dashboard',     icon: LayoutDashboard },
+        { label: 'Schools',                 path: '/admin/schools',       icon: Building2 },
+        { label: 'Users',                   path: '/admin/users',         icon: Users },
         { label: t.dashboard.subjects,      path: '/admin/subjects',      icon: BookOpen },
         { label: 'Events Management',       path: '/admin/events',        icon: Ticket },
         { label: t.dashboard.notifications, path: '/admin/notifications', icon: Bell },

@@ -14,6 +14,8 @@ export interface SafeUser {
   subject?: string
   phone?: string
   joinedAt: string
+  schoolId?: string
+  schoolName?: string
 }
 
 export const profileInclude = {
@@ -22,6 +24,7 @@ export const profileInclude = {
   parent: true,
   authority: true,
   administrator: true,
+  school: { select: { id: true, name: true } },
 } as const
 
 export type UserWithProfiles = PrismaUser & {
@@ -30,6 +33,7 @@ export type UserWithProfiles = PrismaUser & {
   parent: { phone: string | null } | null
   authority: { title: string } | null
   administrator: { title: string } | null
+  school: { id: string; name: string } | null
 }
 
 export function mapRole(role: PrismaUserRole): FrontendRole {
@@ -61,5 +65,7 @@ export function toSafeUser(user: UserWithProfiles): SafeUser {
     subject: user.teacher?.subject,
     phone: user.parent?.phone ?? undefined,
     joinedAt: user.createdAt.toISOString(),
+    schoolId: user.school?.id,
+    schoolName: user.school?.name,
   }
 }
