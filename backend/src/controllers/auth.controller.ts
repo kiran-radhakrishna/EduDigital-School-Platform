@@ -4,10 +4,12 @@ import { AUTH_COOKIE_MAX_AGE_MS, AUTH_COOKIE_NAME, signAuthToken } from '../util
 import { env } from '../config/env'
 import { AuthError, authenticateWithPassword, getAuthResultById, registerUser } from '../services/auth.service'
 
+// In production the frontend and backend are on different origins (separate Vercel
+// projects), so the cookie must be SameSite=None + Secure to survive cross-site fetches.
 const cookieOptions = {
   httpOnly: true,
   secure: env.nodeEnv === 'production',
-  sameSite: 'lax' as const,
+  sameSite: (env.nodeEnv === 'production' ? 'none' : 'lax') as 'none' | 'lax',
 }
 
 const loginSchema = z.object({
