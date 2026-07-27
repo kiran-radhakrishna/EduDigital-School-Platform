@@ -124,6 +124,35 @@ export async function gradeSubmission(
   return getAssignmentById(assignmentId)
 }
 
+export interface UpdateAssignmentInput {
+  subjectId?: string
+  title?: string
+  description?: string
+  dueDate?: string
+  maxScore?: number
+}
+
+export async function updateAssignment(id: string, input: UpdateAssignmentInput) {
+  await getAssignmentById(id)
+
+  return prisma.assignment.update({
+    where: { id },
+    data: {
+      subjectId: input.subjectId,
+      title: input.title?.trim(),
+      description: input.description,
+      dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+      maxScore: input.maxScore,
+    },
+    include: assignmentInclude,
+  })
+}
+
+export async function deleteAssignment(id: string): Promise<void> {
+  await getAssignmentById(id)
+  await prisma.assignment.delete({ where: { id } })
+}
+
 /** `studentUserId` — the student's User.id. Lists every assignment across their enrolled classes. */
 export async function getAssignmentsForStudent(studentUserId: string) {
   const studentId = await resolveStudentId(studentUserId)

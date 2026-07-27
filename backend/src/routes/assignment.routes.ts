@@ -14,11 +14,21 @@ assignmentRouter.post(
   asyncHandler(assignmentController.create),
 )
 assignmentRouter.get('/', asyncHandler(assignmentController.listForClass))
+assignmentRouter.get('/students/:id', asyncHandler(assignmentController.listForStudent))
 assignmentRouter.get('/:id', asyncHandler(assignmentController.getById))
+assignmentRouter.patch(
+  '/:id',
+  authorize('TEACHER', 'ADMINISTRATOR', 'AUTHORITY'),
+  asyncHandler(assignmentController.update),
+)
+assignmentRouter.delete(
+  '/:id',
+  authorize('TEACHER', 'ADMINISTRATOR', 'AUTHORITY'),
+  asyncHandler(assignmentController.remove),
+)
 assignmentRouter.post('/:id/submit', authorize('STUDENT'), asyncHandler(assignmentController.submit))
 assignmentRouter.post(
   '/:id/grade',
   authorize('TEACHER', 'ADMINISTRATOR', 'AUTHORITY'),
   asyncHandler(assignmentController.grade),
 )
-assignmentRouter.get('/students/:id', asyncHandler(assignmentController.listForStudent))

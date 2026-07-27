@@ -45,6 +45,31 @@ export async function getById(req: Request, res: Response): Promise<void> {
   res.status(200).json({ assignment })
 }
 
+const updateSchema = z.object({
+  subjectId: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  dueDate: z.string().min(1).optional(),
+  maxScore: z.number().int().positive().optional(),
+})
+
+export async function update(req: Request, res: Response): Promise<void> {
+  const existing = await assignmentService.getAssignmentById(req.params.id)
+  await assertCanManageClass(req, existing.classId)
+
+  const input = parseOrThrow(updateSchema, req.body)
+  const assignment = await assignmentService.updateAssignment(req.params.id, input)
+  res.status(200).json({ assignment })
+}
+
+export async function remove(req: Request, res: Response): Promise<void> {
+  const existing = await assignmentService.getAssignmentById(req.params.id)
+  await assertCanManageClass(req, existing.classId)
+
+  await assignmentService.deleteAssignment(req.params.id)
+  res.status(204).send()
+}
+
 const submitSchema = z.object({ content: z.string().optional() })
 
 export async function submit(req: Request, res: Response): Promise<void> {
