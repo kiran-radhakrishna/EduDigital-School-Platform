@@ -6,10 +6,46 @@ import { useAuth } from '../../hooks/useAuth'
 import { parentService } from '../../services/parentService'
 import { gradeApi } from '../../services/gradeApi'
 import { assignmentApi } from '../../services/assignmentApi'
+import { wellbeingApi, type StudentWellbeingRecord } from '../../services/wellbeingApi'
 import { ChildOverviewTab } from '../../components/parent/ChildOverviewTab'
 import { ChildWellbeingTab } from '../../components/parent/ChildWellbeingTab'
 import { ChildMessagesTab } from '../../components/parent/ChildMessagesTab'
-import type { ChildGrade, ChildHomework } from '../../types/parent'
+import type { ChildGrade, ChildHomework, ChildWellbeing, MoodEntry } from '../../types/parent'
+
+const MOOD_BY_EMOTION: Record<string, MoodEntry['mood']> = {
+  HAPPY: 'happy',
+  FOCUSED: 'focused',
+  CALM: 'neutral',
+  NEUTRAL: 'neutral',
+  TIRED: 'neutral',
+  SAD: 'stressed',
+  STRESSED: 'stressed',
+  ANXIOUS: 'stressed',
+}
+
+function toChildWellbeing(childId: string, history: StudentWellbeingRecord[]): ChildWellbeing {
+  const chronological = [...history].reverse()
+  const trendPoints = chronological.map((record) => ({
+    date: record.createdAt.slice(0, 10),
+    mood: 100 - record.stressLevel,
+    energy: record.confidence,
+    stress: record.stressLevel,
+  }))
+
+  return {
+    childId,
+    weeklyTrend: trendPoints.slice(-7),
+    monthlyTrend: trendPoints,
+    moodHistory: chronological.map((record) => ({
+      date: record.createdAt.slice(0, 10),
+      mood: MOOD_BY_EMOTION[record.emotion] ?? 'neutral',
+      notes: record.aiResponse,
+    })),
+    energyTrend: trendPoints.map((point) => ({ date: point.date, value: point.energy })),
+    stressTrend: trendPoints.map((point) => ({ date: point.date, value: point.stress })),
+    aiRecommendations: Array.from(new Set(chronological.map((record) => record.recommendation).filter(Boolean))).slice(-5),
+  }
+}
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: TrendingUp },
@@ -32,6 +68,7 @@ export default function ChildDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [grades, setGrades] = useState<ChildGrade[]>([])
   const [homework, setHomework] = useState<ChildHomework[]>([])
+  const [wellbeing, setWellbeing] = useState<ChildWellbeing | undefined>(undefined)
 
   useEffect(() => {
     if (!childId) return
@@ -40,6 +77,7 @@ export default function ChildDashboard() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- demo mode hydration is synchronous, not an async fetch
       setGrades(parentService.getChildGrades(childId))
       setHomework(parentService.getChildHomework(childId))
+      setWellbeing(parentService.getChildWellbeing(childId))
       return
     }
 
@@ -90,6 +128,15 @@ export default function ChildDashboard() {
         if (!cancelled) setHomework([])
       })
 
+    wellbeingApi
+      .getStudentWellbeing(childId)
+      .then((detail) => {
+        if (!cancelled) setWellbeing(toChildWellbeing(childId, detail.history))
+      })
+      .catch(() => {
+        if (!cancelled) setWellbeing(toChildWellbeing(childId, []))
+      })
+
     return () => {
       cancelled = true
     }
@@ -116,7 +163,6 @@ export default function ChildDashboard() {
 
   const events = parentService.getChildEvents(childId)
   const certificates = parentService.getChildCertificates(childId)
-  const wellbeing = parentService.getChildWellbeing(childId)
   const messages = parentService.getTeacherMessages(childId)
 
   const renderTabContent = () => {

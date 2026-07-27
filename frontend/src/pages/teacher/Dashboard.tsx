@@ -6,6 +6,7 @@ import { ClassCard } from '../../components/teacher/ClassCard'
 import { getTeacherClasses, getUnreadNotificationCount } from '../../services/teacherService'
 import { classApi } from '../../services/classApi'
 import { notificationApi } from '../../services/notificationApi'
+import { dashboardApi } from '../../services/dashboardApi'
 import { useAuth } from '../../hooks/useAuth'
 import type { TeacherClass } from '../../types/teacher'
 
@@ -15,6 +16,8 @@ export default function TeacherDashboard() {
   const isReal = !isDemoMode && !!user
   const [classes, setClasses] = useState<TeacherClass[]>(() => (isReal ? [] : getTeacherClasses()))
   const [unreadNotifications, setUnreadNotifications] = useState(() => (isReal ? 0 : getUnreadNotificationCount()))
+  const [pendingGradingCount, setPendingGradingCount] = useState<number | null>(isReal ? null : 12)
+  const [pendingAttendanceCount, setPendingAttendanceCount] = useState<number | null>(isReal ? null : 3)
 
   useEffect(() => {
     if (!isReal || !user) return
@@ -59,6 +62,15 @@ export default function TeacherDashboard() {
       })
       .catch(() => {})
 
+    dashboardApi
+      .getTeacherDashboard(user.id)
+      .then((dashboard) => {
+        if (cancelled) return
+        setPendingGradingCount(dashboard.pendingGradingCount)
+        setPendingAttendanceCount(dashboard.pendingAttendanceCount)
+      })
+      .catch(() => {})
+
     return () => {
       cancelled = true
     }
@@ -72,8 +84,8 @@ export default function TeacherDashboard() {
 
   const stats = [
     { label: "Today's Classes", value: todayClasses, icon: Clock, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' },
-    { label: 'Assignments Pending', value: '12', icon: BookOpen, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' },
-    { label: 'Attendance Pending', value: '3', icon: Calendar, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' },
+    { label: 'Assignments Pending', value: pendingGradingCount ?? '—', icon: BookOpen, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' },
+    { label: 'Attendance Pending', value: pendingAttendanceCount ?? '—', icon: Calendar, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' },
     { label: 'Unread Messages', value: '5', icon: Users, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30' },
     { label: 'Events This Week', value: '2', icon: TrendingUp, color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30' },
     { label: 'Wellbeing Alerts', value: unreadNotifications, icon: Bell, color: 'bg-red-100 text-red-600 dark:bg-red-900/30' },

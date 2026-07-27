@@ -61,6 +61,12 @@ enum WellbeingEmotion {
   ANXIOUS
 }
 
+enum WellbeingRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model School {
   id        String   @id @default(cuid())
   name      String
@@ -257,14 +263,29 @@ model Notification {
   @@index([userId, createdAt])
 }
 
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled    Boolean  @default(true)
+  pushEnabled     Boolean  @default(true)
+  smsEnabled      Boolean  @default(false)
+  digestFrequency String   @default("daily")
+  updatedAt       DateTime @updatedAt
+}
+
 model WellbeingCheckIn {
-  id         String           @id @default(cuid())
-  userId     String
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emotion    WellbeingEmotion
-  confidence Int
-  source     String           @default("manual")
-  createdAt  DateTime         @default(now())
+  id             String             @id @default(cuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emotion        WellbeingEmotion
+  confidence     Int
+  stressLevel    Int                @default(50)
+  riskLevel      WellbeingRiskLevel @default(LOW)
+  aiResponse     String             @default("")
+  recommendation String             @default("")
+  source         String             @default("manual")
+  createdAt      DateTime           @default(now())
 
   @@index([userId, createdAt])
 }
@@ -316,9 +337,10 @@ model User {
   authority     Authority?
   administrator Administrator?
 
-  notifications     Notification[]
-  wellbeingCheckIns WellbeingCheckIn[]
-  wellbeingSkips    WellbeingSkip[]
+  notifications           Notification[]
+  notificationPreference  NotificationPreference?
+  wellbeingCheckIns       WellbeingCheckIn[]
+  wellbeingSkips          WellbeingSkip[]
 
   @@index([schoolId])
 }

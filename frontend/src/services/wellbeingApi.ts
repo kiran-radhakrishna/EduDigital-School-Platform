@@ -38,10 +38,49 @@ function toStatus(response: StatusResponse): WellbeingStatus {
   }
 }
 
+export interface ClassWellbeingSummary {
+  classId: string
+  moodDistribution: { happy: number; focused: number; neutral: number; needsSupport: number }
+  weeklyTrend: Array<{ label: string; happy: number; focused: number; neutral: number; needsSupport: number }>
+  studentsRequestingSupport: Array<{
+    studentId: string
+    studentName: string
+    emotion: string
+    timestamp: string
+    stress: number
+  }>
+}
+
+export interface StudentWellbeingRecord {
+  id: string
+  emotion: string
+  confidence: number
+  stressLevel: number
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
+  aiResponse: string
+  recommendation: string
+  createdAt: string
+}
+
+export interface StudentWellbeingDetail {
+  latest: StudentWellbeingRecord | null
+  history: StudentWellbeingRecord[]
+}
+
 export const wellbeingApi = {
   async getStatus(): Promise<WellbeingStatus> {
     const { data } = await apiClient.get<StatusResponse>('/wellbeing/me')
     return toStatus(data)
+  },
+
+  async getClassWellbeing(classId: string): Promise<ClassWellbeingSummary> {
+    const { data } = await apiClient.get<{ summary: ClassWellbeingSummary }>(`/wellbeing/classes/${classId}`)
+    return data.summary
+  },
+
+  async getStudentWellbeing(studentUserId: string): Promise<StudentWellbeingDetail> {
+    const { data } = await apiClient.get<StudentWellbeingDetail>(`/wellbeing/students/${studentUserId}`)
+    return data
   },
 
   async createCheckIn(

@@ -21,6 +21,17 @@ function toAppNotification(notification: BackendNotification): AppNotification {
   }
 }
 
+export interface NotificationPreferences {
+  emailEnabled: boolean
+  pushEnabled: boolean
+  smsEnabled: boolean
+  digestFrequency: 'daily' | 'weekly' | 'never'
+}
+
+interface PreferencesResponse {
+  preferences: NotificationPreferences
+}
+
 export const notificationApi = {
   async list(): Promise<AppNotification[]> {
     const { data } = await apiClient.get<{ notifications: BackendNotification[] }>('/notifications')
@@ -38,5 +49,19 @@ export const notificationApi = {
 
   async markAllAsRead(): Promise<void> {
     await apiClient.post('/notifications/read-all')
+  },
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/notifications/${id}`)
+  },
+
+  async getPreferences(): Promise<NotificationPreferences> {
+    const { data } = await apiClient.get<PreferencesResponse>('/notifications/preferences')
+    return data.preferences
+  },
+
+  async updatePreferences(input: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
+    const { data } = await apiClient.put<PreferencesResponse>('/notifications/preferences', input)
+    return data.preferences
   },
 }

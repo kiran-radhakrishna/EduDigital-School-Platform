@@ -97,10 +97,21 @@ export interface SchoolAnalytics {
   attendanceTrend: AttendanceTrendPoint[]
   wellbeingByGrade: GradeWellbeingSummary[]
   recentRegistrations: RecentRegistration[]
-  totals: { students: number; teachers: number; parents: number; classes: number }
+  totals: {
+    students: number
+    teachers: number
+    parents: number
+    classes: number
+    users: number
+    schools: number
+    activeStudents: number
+  }
 }
 
 export async function getSchoolAnalytics(schoolId: string): Promise<SchoolAnalytics> {
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
   const [
     enrollmentByGrade,
     attendanceTrend,
@@ -110,6 +121,8 @@ export async function getSchoolAnalytics(schoolId: string): Promise<SchoolAnalyt
     teachers,
     parents,
     classes,
+    users,
+    activeStudentRecords,
   ] = await Promise.all([
     getEnrollmentByGrade(schoolId),
     getAttendanceTrend(schoolId),
@@ -119,6 +132,12 @@ export async function getSchoolAnalytics(schoolId: string): Promise<SchoolAnalyt
     prisma.teacher.count({ where: { schoolId } }),
     prisma.parent.count({ where: { schoolId } }),
     prisma.schoolClass.count({ where: { schoolId } }),
+    prisma.user.count({ where: { schoolId } }),
+    prisma.attendanceRecord.findMany({
+      where: { student: { schoolId }, date: { gte: thirtyDaysAgo } },
+      select: { studentId: true },
+      distinct: ['studentId'],
+    }),
   ])
 
   return {
@@ -126,6 +145,6 @@ export async function getSchoolAnalytics(schoolId: string): Promise<SchoolAnalyt
     attendanceTrend,
     wellbeingByGrade,
     recentRegistrations,
-    totals: { students, teachers, parents, classes },
+    totals: { students, teachers, parents, classes, users, schools: 1, activeStudents: activeStudentRecords.length },
   }
 }

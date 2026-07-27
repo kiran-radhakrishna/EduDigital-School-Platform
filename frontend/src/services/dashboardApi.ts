@@ -15,6 +15,7 @@ export interface TeacherDashboard {
   totalStudents: number
   subjects: string[]
   pendingGradingCount: number
+  pendingAttendanceCount: number
   classes: Array<{ classId: string; className: string; subjectName: string }>
 }
 

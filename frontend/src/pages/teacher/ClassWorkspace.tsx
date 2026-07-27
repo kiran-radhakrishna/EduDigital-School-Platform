@@ -8,10 +8,11 @@ import { ClassAttendanceTab } from '../../components/teacher/ClassAttendanceTab'
 import { ClassWellbeingTab } from '../../components/teacher/ClassWellbeingTab'
 import { AssignmentsPanel } from '../../components/teacher/AssignmentsPanel'
 import { GradesPanel } from '../../components/teacher/GradesPanel'
-import { getClassById, getClassWellbeing } from '../../services/teacherService'
+import { getClassById, getClassWellbeing as getClassWellbeingMock } from '../../services/teacherService'
 import { classApi } from '../../services/classApi'
+import { wellbeingApi } from '../../services/wellbeingApi'
 import { useAuth } from '../../hooks/useAuth'
-import type { TeacherClass } from '../../types/teacher'
+import type { TeacherClass, WellbeingAnonymousData } from '../../types/teacher'
 
 export default function ClassWorkspace() {
   const { classId } = useParams<{ classId: string }>()
@@ -24,7 +25,23 @@ export default function ClassWorkspace() {
     isReal || !classId ? undefined : getClassById(classId),
   )
   const [isLoading, setIsLoading] = useState(isReal)
-  const wellbeingData = classId ? getClassWellbeing(classId) : undefined
+  const [wellbeingData, setWellbeingData] = useState<WellbeingAnonymousData | undefined>(() =>
+    isReal || !classId ? undefined : getClassWellbeingMock(classId),
+  )
+
+  useEffect(() => {
+    if (!isReal || !classId) return
+    let cancelled = false
+    wellbeingApi
+      .getClassWellbeing(classId)
+      .then((summary) => {
+        if (!cancelled) setWellbeingData(summary)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [isReal, classId])
 
   useEffect(() => {
     if (!isReal || !classId || !user) {

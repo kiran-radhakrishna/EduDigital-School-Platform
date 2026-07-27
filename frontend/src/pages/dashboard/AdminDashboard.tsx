@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, CalendarCheck, GraduationCap, Users } from 'lucide-react'
+import { BookOpen, Building2, CalendarCheck, GraduationCap, UserCheck, Users, Users2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { Avatar } from '../../components/common/Avatar'
@@ -9,6 +9,7 @@ import { Card } from '../../components/common/Card'
 import { StatCard } from '../../components/common/StatCard'
 import { useAuth } from '../../hooks/useAuth'
 import { analyticsApi } from '../../services/analyticsApi'
+import { notificationApi } from '../../services/notificationApi'
 import { getCurrentUserIdentity } from '../../utils/helpers'
 
 interface EnrollmentPoint {
@@ -40,6 +41,16 @@ interface DashboardTotals {
   teachers: number
   classes: number
   attendance: number
+  users: number
+  schools: number
+  activeStudents: number
+}
+
+interface SystemNotice {
+  id: string
+  title: string
+  message: string
+  variant: 'success' | 'warning' | 'info' | 'danger'
 }
 
 const DEMO_ENROLLMENT: EnrollmentPoint[] = [
@@ -80,9 +91,17 @@ const DEMO_REGISTRATIONS: RegistrationRow[] = [
   { id: 'registration-5', name: 'Ethan Brooks', role: 'Teacher', joinedAt: '2026-06-28' },
 ]
 
-const DEMO_TOTALS: DashboardTotals = { students: 1248, teachers: 84, classes: 42, attendance: 93 }
+const DEMO_TOTALS: DashboardTotals = {
+  students: 1248,
+  teachers: 84,
+  classes: 42,
+  attendance: 93,
+  users: 1452,
+  schools: 1,
+  activeStudents: 1190,
+}
 
-const systemNotices = [
+const DEMO_SYSTEM_NOTICES: SystemNotice[] = [
   {
     id: 'notice-1',
     title: 'Quarterly attendance review completed',
@@ -147,7 +166,10 @@ export default function AdminDashboard() {
   const [recentRegistrations, setRecentRegistrations] = useState<RegistrationRow[]>(
     isDemoMode ? DEMO_REGISTRATIONS : [],
   )
-  const [totals, setTotals] = useState<DashboardTotals>(isDemoMode ? DEMO_TOTALS : { students: 0, teachers: 0, classes: 0, attendance: 0 })
+  const [totals, setTotals] = useState<DashboardTotals>(
+    isDemoMode ? DEMO_TOTALS : { students: 0, teachers: 0, classes: 0, attendance: 0, users: 0, schools: 0, activeStudents: 0 },
+  )
+  const [systemNotices, setSystemNotices] = useState<SystemNotice[]>(isDemoMode ? DEMO_SYSTEM_NOTICES : [])
 
   useEffect(() => {
     // Demo Mode never touches the backend — it keeps its own static sample data.
@@ -177,7 +199,25 @@ export default function AdminDashboard() {
           teachers: analytics.totals.teachers,
           classes: analytics.totals.classes,
           attendance: latestAttendance,
+          users: analytics.totals.users,
+          schools: analytics.totals.schools,
+          activeStudents: analytics.totals.activeStudents,
         })
+      })
+      .catch(() => {})
+
+    notificationApi
+      .list()
+      .then((notifications) => {
+        if (cancelled) return
+        setSystemNotices(
+          notifications.slice(0, 5).map((notification) => ({
+            id: notification.id,
+            title: notification.title,
+            message: notification.message,
+            variant: notification.type === 'error' ? 'danger' : notification.type,
+          })),
+        )
       })
       .catch(() => {})
 
@@ -207,6 +247,9 @@ export default function AdminDashboard() {
         <StatCard icon={<GraduationCap size={20} />} title="Total Teachers" value={totals.teachers} />
         <StatCard icon={<BookOpen size={20} />} title="Total Classes" value={totals.classes} />
         <StatCard icon={<CalendarCheck size={20} />} title="School Attendance" value={`${totals.attendance}%`} />
+        <StatCard icon={<Users2 size={20} />} title="Total Users" value={totals.users.toLocaleString()} />
+        <StatCard icon={<Building2 size={20} />} title="Schools" value={totals.schools} />
+        <StatCard icon={<UserCheck size={20} />} title="Active Students" value={totals.activeStudents.toLocaleString()} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -314,6 +357,9 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-500 dark:text-gray-400">{notice.message}</p>
             </div>
           ))}
+          {systemNotices.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No notices yet.</p>
+          )}
         </div>
       </Card>
     </motion.div>

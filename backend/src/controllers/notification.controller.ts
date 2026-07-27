@@ -41,3 +41,26 @@ export async function markAllAsRead(req: Request, res: Response): Promise<void> 
   const notifications = await notificationService.markAllAsRead(requireUserId(req))
   res.status(200).json({ notifications })
 }
+
+export async function remove(req: Request, res: Response): Promise<void> {
+  await notificationService.deleteNotification(requireUserId(req), req.params.id)
+  res.status(204).send()
+}
+
+export async function getPreferences(req: Request, res: Response): Promise<void> {
+  const preferences = await notificationService.getPreferences(requireUserId(req))
+  res.status(200).json({ preferences })
+}
+
+const updatePreferencesSchema = z.object({
+  emailEnabled: z.boolean().optional(),
+  pushEnabled: z.boolean().optional(),
+  smsEnabled: z.boolean().optional(),
+  digestFrequency: z.enum(['daily', 'weekly', 'never']).optional(),
+})
+
+export async function updatePreferences(req: Request, res: Response): Promise<void> {
+  const input = parseOrThrow(updatePreferencesSchema, req.body)
+  const preferences = await notificationService.updatePreferences(requireUserId(req), input)
+  res.status(200).json({ preferences })
+}

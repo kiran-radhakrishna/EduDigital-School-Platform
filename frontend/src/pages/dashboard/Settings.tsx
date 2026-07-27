@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Globe, Lock, Moon, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useTheme } from '../../hooks/useTheme'
 import { cn } from '../../utils/helpers'
+import { notificationApi } from '../../services/notificationApi'
 
 interface ToggleSwitchProps {
   checked: boolean
@@ -37,7 +38,7 @@ function ToggleSwitch({ checked, onChange }: ToggleSwitchProps) {
 }
 
 export default function Settings() {
-  const { user } = useAuth()
+  const { user, isDemoMode } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const { lang, setLang, t } = useLanguage()
   const [newPassword, setNewPassword] = useState('')
@@ -54,7 +55,45 @@ export default function Settings() {
   })
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
 
+  useEffect(() => {
+    if (isDemoMode) return
+    let cancelled = false
+    notificationApi
+      .getPreferences()
+      .then((preferences) => {
+        if (cancelled) return
+        setNotificationSettings({
+          email: preferences.emailEnabled,
+          push: preferences.pushEnabled,
+          sms: preferences.smsEnabled,
+          digest: preferences.digestFrequency !== 'never',
+        })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [isDemoMode])
+
   const saveSettings = () => toast.success('Settings saved!')
+
+  const saveNotificationSettings = async () => {
+    if (isDemoMode) {
+      toast.success('Settings saved!')
+      return
+    }
+    try {
+      await notificationApi.updatePreferences({
+        emailEnabled: notificationSettings.email,
+        pushEnabled: notificationSettings.push,
+        smsEnabled: notificationSettings.sms,
+        digestFrequency: notificationSettings.digest ? 'weekly' : 'never',
+      })
+      toast.success('Settings saved!')
+    } catch {
+      toast.error('Failed to save notification settings.')
+    }
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -157,7 +196,7 @@ export default function Settings() {
           ))}
         </div>
         <div className="mt-6 flex justify-end">
-          <Button size="sm" onClick={saveSettings}>
+          <Button size="sm" onClick={saveNotificationSettings}>
             {t.common.save}
           </Button>
         </div>

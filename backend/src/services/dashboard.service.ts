@@ -41,14 +41,26 @@ export async function getTeacherDashboard(teacherUserId: string) {
     }),
   ])
 
-  const classIds = new Set(assignments.map((assignment) => assignment.classId))
+  const classIds = [...new Set(assignments.map((assignment) => assignment.classId))]
   const subjectNames = new Set(assignments.map((assignment) => assignment.subject.name))
 
+  const today = new Date(new Date().toISOString().slice(0, 10))
+  const markedClasses =
+    classIds.length === 0
+      ? []
+      : await prisma.attendanceRecord.findMany({
+          where: { classId: { in: classIds }, date: today },
+          select: { classId: true },
+          distinct: ['classId'],
+        })
+  const pendingAttendanceCount = classIds.length - markedClasses.length
+
   return {
-    totalClasses: classIds.size,
+    totalClasses: classIds.length,
     totalStudents: assignedStudents.length,
     subjects: Array.from(subjectNames),
     pendingGradingCount,
+    pendingAttendanceCount,
     classes: assignments.map((assignment) => ({
       classId: assignment.classId,
       className: assignment.class.name,

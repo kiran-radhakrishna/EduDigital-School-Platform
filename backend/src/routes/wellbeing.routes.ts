@@ -11,3 +11,5 @@ wellbeingRouter.post('/check-ins', asyncHandler(wellbeingController.createCheckI
 wellbeingRouter.get('/me', asyncHandler(wellbeingController.getStatus))
 wellbeingRouter.get('/me/history', asyncHandler(wellbeingController.getHistory))
 wellbeingRouter.post('/skip', asyncHandler(wellbeingController.skipToday))
+wellbeingRouter.get('/classes/:classId', asyncHandler(wellbeingController.getClassWellbeing))
+wellbeingRouter.get('/students/:id', asyncHandler(wellbeingController.getStudentWellbeing))

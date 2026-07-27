@@ -29,7 +29,15 @@ export interface SchoolAnalytics {
   attendanceTrend: AttendanceTrendPoint[]
   wellbeingByGrade: GradeWellbeingSummary[]
   recentRegistrations: RecentRegistration[]
-  totals: { students: number; teachers: number; parents: number; classes: number }
+  totals: {
+    students: number
+    teachers: number
+    parents: number
+    classes: number
+    users: number
+    schools: number
+    activeStudents: number
+  }
 }
 
 export const analyticsApi = {

@@ -40,3 +40,38 @@ export async function markAllAsRead(userId: string) {
   await prisma.notification.updateMany({ where: { userId, isRead: false }, data: { isRead: true } })
   return listNotifications(userId)
 }
+
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+  const notification = await prisma.notification.findUnique({ where: { id } })
+  if (!notification || notification.userId !== userId) {
+    throw new NotFoundError('Notification not found.')
+  }
+  await prisma.notification.delete({ where: { id } })
+}
+
+const DEFAULT_PREFERENCES = {
+  emailEnabled: true,
+  pushEnabled: true,
+  smsEnabled: false,
+  digestFrequency: 'daily',
+}
+
+export async function getPreferences(userId: string) {
+  const preference = await prisma.notificationPreference.findUnique({ where: { userId } })
+  return preference ?? { userId, ...DEFAULT_PREFERENCES }
+}
+
+export interface UpdatePreferencesInput {
+  emailEnabled?: boolean
+  pushEnabled?: boolean
+  smsEnabled?: boolean
+  digestFrequency?: string
+}
+
+export async function updatePreferences(userId: string, input: UpdatePreferencesInput) {
+  return prisma.notificationPreference.upsert({
+    where: { userId },
+    update: input,
+    create: { userId, ...DEFAULT_PREFERENCES, ...input },
+  })
+}
