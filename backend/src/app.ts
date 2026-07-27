@@ -14,6 +14,7 @@ import { timetableRouter } from './routes/timetable.routes'
 import { notificationRouter } from './routes/notification.routes'
 import { wellbeingRouter } from './routes/wellbeing.routes'
 import { analyticsRouter } from './routes/analytics.routes'
+import { dashboardRouter } from './routes/dashboard.routes'
 
 function isStatusCodedError(err: unknown): err is Error & { statusCode: number } {
   return (
@@ -45,6 +46,7 @@ export function createApp(): Express {
   app.use('/notifications', notificationRouter)
   app.use('/wellbeing', wellbeingRouter)
   app.use('/analytics', analyticsRouter)
+  app.use('/dashboard', dashboardRouter)
   app.use('/', academicRouter)
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

@@ -119,6 +119,25 @@ export async function getTeacherAssignments(teacherUserId: string) {
   })
 }
 
+/** `teacherUserId` — the teacher's User.id. The distinct roster of students across every class they teach. */
+export async function getAssignedStudents(teacherUserId: string) {
+  const teacherId = await resolveTeacherId(teacherUserId)
+
+  const assignments = await prisma.classAssignment.findMany({ where: { teacherId }, select: { classId: true } })
+  const classIds = [...new Set(assignments.map((assignment) => assignment.classId))]
+  if (classIds.length === 0) return []
+
+  return prisma.enrollment.findMany({
+    where: { classId: { in: classIds } },
+    include: {
+      student: { include: { user: { select: safeUserSelect } } },
+      class: { select: { id: true, name: true, grade: true, section: true } },
+    },
+    distinct: ['studentId'],
+    orderBy: { student: { rollNumber: 'asc' } },
+  })
+}
+
 /** `studentUserId` — the student's User.id. */
 export async function getStudentEnrollment(studentUserId: string) {
   const studentId = await resolveStudentId(studentUserId)
