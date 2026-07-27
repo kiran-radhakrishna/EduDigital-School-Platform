@@ -1,19 +1,84 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Users, Clock, BookOpen, FileText, Award, MessageSquare, TrendingUp, Heart } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { ClassOverviewTab } from '../../components/teacher/ClassOverviewTab'
 import { ClassStudentsTab } from '../../components/teacher/ClassStudentsTab'
 import { ClassAttendanceTab } from '../../components/teacher/ClassAttendanceTab'
 import { ClassWellbeingTab } from '../../components/teacher/ClassWellbeingTab'
+import { AssignmentsPanel } from '../../components/teacher/AssignmentsPanel'
+import { GradesPanel } from '../../components/teacher/GradesPanel'
 import { getClassById, getClassWellbeing } from '../../services/teacherService'
+import { classApi } from '../../services/classApi'
+import { useAuth } from '../../hooks/useAuth'
+import type { TeacherClass } from '../../types/teacher'
 
 export default function ClassWorkspace() {
   const { classId } = useParams<{ classId: string }>()
   const navigate = useNavigate()
+  const { user, isDemoMode } = useAuth()
+  const isReal = !isDemoMode && !!user
   const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'attendance' | 'homework' | 'assignments' | 'grades' | 'events' | 'messages' | 'analytics' | 'wellbeing'>('overview')
 
-  const classData = classId ? getClassById(classId) : undefined
+  const [classData, setClassData] = useState<TeacherClass | undefined>(() =>
+    isReal || !classId ? undefined : getClassById(classId),
+  )
+  const [isLoading, setIsLoading] = useState(isReal)
   const wellbeingData = classId ? getClassWellbeing(classId) : undefined
+
+  useEffect(() => {
+    if (!isReal || !classId || !user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- demo mode never enters the async fetch below
+      setIsLoading(false)
+      return
+    }
+    let cancelled = false
+    setIsLoading(true)
+
+    Promise.all([classApi.getMyClasses(user.id), classApi.getClassRoster(classId)])
+      .then(([summaries, roster]) => {
+        if (cancelled) return
+        const summary = summaries.find((item) => item.classId === classId)
+        if (!summary) {
+          setClassData(undefined)
+          return
+        }
+        setClassData({
+          id: classId,
+          name: summary.className,
+          grade: summary.grade,
+          subject: summary.subjectName,
+          studentCount: roster.length,
+          students: roster.map((student) => ({
+            id: student.userId,
+            name: student.name,
+            attendancePercent: 100,
+            averageGrade: '—',
+            wellbeingStatus: 'neutral',
+            assignmentsDue: 0,
+          })),
+          schedule: [],
+        })
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Failed to load class.')
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isReal, classId, user])
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Loading class…</p>
+      </div>
+    )
+  }
 
   if (!classData) {
     return (
@@ -94,16 +159,8 @@ export default function ClassWorkspace() {
               Homework management coming soon
             </div>
           )}
-          {activeTab === 'assignments' && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Assignment management coming soon
-            </div>
-          )}
-          {activeTab === 'grades' && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Gradebook coming soon
-            </div>
-          )}
+          {activeTab === 'assignments' && classId && <AssignmentsPanel classId={classId} />}
+          {activeTab === 'grades' && classId && <GradesPanel classId={classId} />}
           {activeTab === 'events' && (
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Events management coming soon

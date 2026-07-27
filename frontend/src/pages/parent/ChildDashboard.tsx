@@ -1,11 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3, BookOpen, Calendar, FileText, MessageSquare, Shield, TrendingUp, User, Zap } from 'lucide-react'
 import { useParent } from '../../hooks/useParent'
+import { useAuth } from '../../hooks/useAuth'
 import { parentService } from '../../services/parentService'
+import { gradeApi } from '../../services/gradeApi'
+import { assignmentApi } from '../../services/assignmentApi'
 import { ChildOverviewTab } from '../../components/parent/ChildOverviewTab'
 import { ChildWellbeingTab } from '../../components/parent/ChildWellbeingTab'
 import { ChildMessagesTab } from '../../components/parent/ChildMessagesTab'
+import type { ChildGrade, ChildHomework } from '../../types/parent'
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: TrendingUp },
@@ -24,7 +28,72 @@ export default function ChildDashboard() {
   const navigate = useNavigate()
   const { childId } = useParams<{ childId: string }>()
   const { children, childProgress } = useParent()
+  const { isDemoMode } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
+  const [grades, setGrades] = useState<ChildGrade[]>([])
+  const [homework, setHomework] = useState<ChildHomework[]>([])
+
+  useEffect(() => {
+    if (!childId) return
+
+    if (isDemoMode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- demo mode hydration is synchronous, not an async fetch
+      setGrades(parentService.getChildGrades(childId))
+      setHomework(parentService.getChildHomework(childId))
+      return
+    }
+
+    let cancelled = false
+    gradeApi
+      .listForStudent(childId)
+      .then((apiGrades) => {
+        if (cancelled) return
+        setGrades(
+          apiGrades.map((grade) => ({
+            id: grade.id,
+            childId,
+            subject: grade.subject.name,
+            date: grade.date,
+            score: grade.score,
+            maxScore: grade.maxScore,
+            teacher: '',
+            type: grade.type.toLowerCase() as ChildGrade['type'],
+          })),
+        )
+      })
+      .catch(() => {
+        if (!cancelled) setGrades([])
+      })
+
+    assignmentApi
+      .listForStudent(childId)
+      .then((submissions) => {
+        if (cancelled) return
+        setHomework(
+          submissions.map((submission) => ({
+            id: submission.id,
+            childId,
+            title: submission.assignment.title,
+            subject: submission.assignment.subject.name,
+            description: submission.assignment.description ?? '',
+            dueDate: submission.assignment.dueDate,
+            status: submission.status.toLowerCase() as ChildHomework['status'],
+            submittedDate: submission.submittedAt ?? undefined,
+            teacher: `${submission.assignment.teacher.user.firstName} ${submission.assignment.teacher.user.lastName}`,
+            teacherFeedback: submission.feedback ?? undefined,
+            grade: submission.score ?? undefined,
+            attachments: [],
+          })),
+        )
+      })
+      .catch(() => {
+        if (!cancelled) setHomework([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [childId, isDemoMode])
 
   if (!childId) {
     return (
@@ -45,8 +114,6 @@ export default function ChildDashboard() {
     )
   }
 
-  const homework = parentService.getChildHomework(childId)
-  const grades = parentService.getChildGrades(childId)
   const events = parentService.getChildEvents(childId)
   const certificates = parentService.getChildCertificates(childId)
   const wellbeing = parentService.getChildWellbeing(childId)

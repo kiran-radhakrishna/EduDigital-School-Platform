@@ -1,14 +1,68 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Calendar, Clock, BookOpen, Users, TrendingUp } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { ClassCard } from '../../components/teacher/ClassCard'
 import { getTeacherClasses, getUnreadNotificationCount } from '../../services/teacherService'
+import { classApi } from '../../services/classApi'
+import { notificationApi } from '../../services/notificationApi'
 import { useAuth } from '../../hooks/useAuth'
+import type { TeacherClass } from '../../types/teacher'
 
 export default function TeacherDashboard() {
-  const { user } = useAuth()
+  const { user, isDemoMode } = useAuth()
   const navigate = useNavigate()
-  const classes = getTeacherClasses()
-  const unreadNotifications = getUnreadNotificationCount()
+  const isReal = !isDemoMode && !!user
+  const [classes, setClasses] = useState<TeacherClass[]>(() => (isReal ? [] : getTeacherClasses()))
+  const [unreadNotifications, setUnreadNotifications] = useState(() => (isReal ? 0 : getUnreadNotificationCount()))
+
+  useEffect(() => {
+    if (!isReal || !user) return
+    let cancelled = false
+
+    classApi
+      .getMyClasses(user.id)
+      .then((summaries) =>
+        Promise.all(
+          summaries.map(async (summary): Promise<TeacherClass> => {
+            const roster = await classApi.getClassRoster(summary.classId)
+            return {
+              id: summary.classId,
+              name: summary.className,
+              grade: summary.grade,
+              subject: summary.subjectName,
+              studentCount: roster.length,
+              students: roster.map((student) => ({
+                id: student.userId,
+                name: student.name,
+                attendancePercent: 100,
+                averageGrade: '—',
+                wellbeingStatus: 'neutral',
+                assignmentsDue: 0,
+              })),
+              schedule: [],
+            }
+          }),
+        ),
+      )
+      .then((built) => {
+        if (!cancelled) setClasses(built)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Failed to load your classes.')
+      })
+
+    notificationApi
+      .unreadCount()
+      .then((count) => {
+        if (!cancelled) setUnreadNotifications(count)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [isReal, user])
 
   const handleOpenClass = (classId: string) => {
     navigate(`/teacher/class/${classId}`)
