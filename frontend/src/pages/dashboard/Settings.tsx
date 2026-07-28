@@ -69,7 +69,9 @@ export default function Settings() {
           digest: preferences.digestFrequency !== 'never',
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load your notification preferences.')
+      })
     return () => {
       cancelled = true
     }

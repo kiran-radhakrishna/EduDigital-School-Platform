@@ -56,7 +56,9 @@ export default function Notifications() {
       .then((items) => {
         if (!cancelled) setNotifications(items)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load your notifications.')
+      })
 
     return () => {
       cancelled = true
@@ -70,7 +72,11 @@ export default function Notifications() {
 
   const markAllAsRead = () => {
     setNotifications((current) => current.map((item) => ({ ...item, read: true })))
-    if (!isDemoMode) void notificationApi.markAllAsRead().catch(() => {})
+    if (!isDemoMode) {
+      void notificationApi
+        .markAllAsRead()
+        .catch(() => toast.error('Could not sync read status with the server.'))
+    }
     toast.success('All notifications marked as read')
   }
 
@@ -78,7 +84,9 @@ export default function Notifications() {
     setNotifications((current) =>
       current.map((item) => (item.id === id && !item.read ? { ...item, read: true } : item)),
     )
-    if (!isDemoMode) void notificationApi.markAsRead(id).catch(() => {})
+    if (!isDemoMode) {
+      void notificationApi.markAsRead(id).catch(() => toast.error('Could not sync read status with the server.'))
+    }
   }
 
   return (

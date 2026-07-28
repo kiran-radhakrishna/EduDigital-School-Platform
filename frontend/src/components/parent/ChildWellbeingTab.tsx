@@ -45,7 +45,7 @@ export function ChildWellbeingTab({ wellbeing, childName }: ChildWellbeingTabPro
       </div>
 
       {/* Weekly Trend */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Weekly Wellbeing Trend</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={wellbeing.weeklyTrend}>
@@ -62,7 +62,7 @@ export function ChildWellbeingTab({ wellbeing, childName }: ChildWellbeingTabPro
 
       {/* Mood Distribution */}
       {moodDistribution.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Mood Distribution</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -79,7 +79,7 @@ export function ChildWellbeingTab({ wellbeing, childName }: ChildWellbeingTabPro
 
       {/* Energy and Stress Trends */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Energy Trend</h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={wellbeing.energyTrend}>
@@ -91,7 +91,7 @@ export function ChildWellbeingTab({ wellbeing, childName }: ChildWellbeingTabPro
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Stress Trend</h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={wellbeing.stressTrend}>
@@ -106,7 +106,7 @@ export function ChildWellbeingTab({ wellbeing, childName }: ChildWellbeingTabPro
 
       {/* AI Recommendations */}
       {wellbeing.aiRecommendations.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">AI Family Recommendations</h3>
           <ul className="space-y-2">
             {wellbeing.aiRecommendations.map((rec, idx) => (

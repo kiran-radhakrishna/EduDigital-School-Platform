@@ -29,9 +29,9 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-900 pb-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
       {/* Welcome Section */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-dark-800">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
@@ -42,7 +42,7 @@ export default function ParentDashboard() {
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-dark-700">
+                <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                   <Bell className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   {unreadNotificationCount > 0 && (
                     <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
@@ -108,22 +108,22 @@ export default function ParentDashboard() {
         </motion.div>
 
         {/* Quick Actions */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Quick Actions</h3>
           <div className="flex flex-wrap gap-2">
             <button className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 transition-colors">
               <MessageSquare className="h-4 w-4" />
               Message Teacher
             </button>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-dark-700 dark:text-white dark:hover:bg-dark-600">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
               <Award className="h-4 w-4" />
               Download Certificate
             </button>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-dark-700 dark:text-white dark:hover:bg-dark-600">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
               <AlertCircle className="h-4 w-4" />
               Approve Events
             </button>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-dark-700 dark:text-white dark:hover:bg-dark-600">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
               <Calendar className="h-4 w-4" />
               View Calendar
             </button>

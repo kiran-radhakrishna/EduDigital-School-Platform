@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 import { WellbeingProvider } from './context/WellbeingContext'
 import { EventsProvider } from './context/EventsContext'
 import { ParentProvider } from './context/ParentContext'
@@ -91,7 +92,7 @@ function App() {
                 <Route path="/organizer/portal" element={<OrganizerPortal />} />
 
               {/* Student routes */}
-              <Route path="/student" element={<DashboardLayout />}>
+              <Route path="/student" element={<ProtectedRoute allowedRole="student"><DashboardLayout /></ProtectedRoute>}>
                 <Route path="dashboard"              element={<StudentDashboard />} />
                 <Route path="study-planner"          element={<StudyPlanner />} />
                 <Route path="subjects"               element={<Subjects />} />
@@ -117,7 +118,7 @@ function App() {
               </Route>
 
               {/* Teacher routes */}
-              <Route path="/teacher" element={<DashboardLayout />}>
+              <Route path="/teacher" element={<ProtectedRoute allowedRole="teacher"><DashboardLayout /></ProtectedRoute>}>
                 <Route path="dashboard"     element={<TeacherDashboard />} />
                 <Route path="class/:classId" element={<ClassWorkspace />} />
                 <Route path="timetable"     element={<Timetable />} />
@@ -134,7 +135,7 @@ function App() {
               </Route>
 
               {/* Parent routes */}
-              <Route path="/parent" element={<DashboardLayout />}>
+              <Route path="/parent" element={<ProtectedRoute allowedRole="parent"><DashboardLayout /></ProtectedRoute>}>
                 <Route path="dashboard"     element={<ParentDashboard />} />
                 <Route path="child/:childId" element={<ChildDashboard />} />
                 <Route path="grades"        element={<Grades />} />
@@ -151,7 +152,7 @@ function App() {
               </Route>
 
               {/* Admin routes */}
-              <Route path="/admin" element={<DashboardLayout />}>
+              <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><DashboardLayout /></ProtectedRoute>}>
                 <Route path="dashboard"     element={<AdminDashboard />} />
                 <Route path="schools"       element={<AdminSchools />} />
                 <Route path="users"         element={<AdminUsers />} />

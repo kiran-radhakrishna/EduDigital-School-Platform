@@ -1,15 +1,35 @@
 import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { parseOrThrow } from '../utils/validate'
+import { ForbiddenError } from '../utils/errors'
+import { getUserSchoolId } from '../services/resolvers'
 import * as schoolService from '../services/school.service'
 import * as analyticsService from '../services/analytics.service'
 
-export async function list(_req: Request, res: Response): Promise<void> {
-  const schools = await schoolService.listSchools()
+function isPrivileged(req: Request): boolean {
+  return req.userRole === 'ADMINISTRATOR' || req.userRole === 'AUTHORITY'
+}
+
+export async function list(req: Request, res: Response): Promise<void> {
+  if (isPrivileged(req)) {
+    const schools = await schoolService.listSchools()
+    res.status(200).json({ schools })
+    return
+  }
+
+  const schoolId = req.userId ? await getUserSchoolId(req.userId) : null
+  const schools = schoolId ? [await schoolService.getSchoolById(schoolId)] : []
   res.status(200).json({ schools })
 }
 
 export async function getById(req: Request, res: Response): Promise<void> {
+  if (!isPrivileged(req)) {
+    const schoolId = req.userId ? await getUserSchoolId(req.userId) : null
+    if (schoolId !== req.params.id) {
+      throw new ForbiddenError('You do not have permission to view this school.')
+    }
+  }
+
   const school = await schoolService.getSchoolById(req.params.id)
   res.status(200).json({ school })
 }

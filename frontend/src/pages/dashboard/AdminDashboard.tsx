@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Building2, CalendarCheck, GraduationCap, UserCheck, Users, Users2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import toast from 'react-hot-toast'
 
 import { Avatar } from '../../components/common/Avatar'
 import { Badge } from '../../components/common/Badge'
@@ -204,7 +205,9 @@ export default function AdminDashboard() {
           activeStudents: analytics.totals.activeStudents,
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load school analytics.')
+      })
 
     notificationApi
       .list()
@@ -219,7 +222,9 @@ export default function AdminDashboard() {
           })),
         )
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load system notices.')
+      })
 
     return () => {
       cancelled = true

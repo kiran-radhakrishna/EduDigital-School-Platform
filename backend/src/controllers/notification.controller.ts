@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { parseOrThrow } from '../utils/validate'
-import { ForbiddenError } from '../utils/errors'
+import { ForbiddenError, NotFoundError } from '../utils/errors'
+import { getUserRoleAndSchool, getUserSchoolId, isStudentInTeachersClass } from '../services/resolvers'
 import * as notificationService from '../services/notification.service'
 
 function requireUserId(req: Request): string {
@@ -31,8 +32,31 @@ const createSchema = z.object({
 
 export async function create(req: Request, res: Response): Promise<void> {
   const input = parseOrThrow(createSchema, req.body)
+
+  if (req.userRole === 'TEACHER') {
+    await assertTeacherCanNotify(requireUserId(req), input.userId)
+  }
+
   const notification = await notificationService.createNotification(input)
   res.status(201).json({ notification })
+}
+
+/** Teachers may only notify students in their own classes, or any user in their own school. */
+async function assertTeacherCanNotify(teacherUserId: string, targetUserId: string): Promise<void> {
+  const target = await getUserRoleAndSchool(targetUserId)
+  if (!target) {
+    throw new NotFoundError('Target user not found.')
+  }
+
+  if (target.role === 'STUDENT') {
+    if (await isStudentInTeachersClass(teacherUserId, targetUserId)) return
+    throw new ForbiddenError('You may only notify students in your own classes.')
+  }
+
+  const teacherSchoolId = await getUserSchoolId(teacherUserId)
+  if (!teacherSchoolId || target.schoolId !== teacherSchoolId) {
+    throw new ForbiddenError('You may only notify users in your own school.')
+  }
 }
 
 export async function markAsRead(req: Request, res: Response): Promise<void> {

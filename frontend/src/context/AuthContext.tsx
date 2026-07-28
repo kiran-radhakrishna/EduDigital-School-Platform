@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import toast from 'react-hot-toast'
 import { AuthContext } from './auth-context'
 import type { User, UserRole } from '../types'
 import { DEMO_PERSONAS, getDemoPersona, isDemoUserId, type DemoPersonaKey } from '../data/demoUsers'
@@ -121,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((previousUser) => {
       // Demo Mode never touches the backend — nothing to clear server-side.
       if (previousUser && !isDemoUserId(previousUser.id)) {
-        void authApi.logout().catch(() => {})
+        void authApi
+          .logout()
+          .catch(() => toast.error('Could not reach the server to end your session, but you are signed out locally.'))
       }
       return null
     })

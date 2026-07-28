@@ -6,7 +6,13 @@ const MOCK_REPLIES = [
   "I've looked at this from a few angles — let me walk you through the most useful one.",
 ]
 
-/** Deployed for Demo Mode and as the default provider — never calls an external API. */
+/**
+ * The safe default provider — never calls an external API. Used only when no real provider
+ * (e.g. OpenAI) is configured via AI_PROVIDER/OPENAI_API_KEY. Note: Demo Mode never reaches this
+ * class at all — it's a frontend-only simulation that never calls the backend (see AITutor.tsx
+ * and data/demoAiResponses.ts). This class is what a *real, authenticated* user gets if the
+ * backend has no AI provider configured yet.
+ */
 export class MockProvider implements AIProvider {
   readonly name = 'mock'
 
@@ -14,7 +20,7 @@ export class MockProvider implements AIProvider {
     const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')
     const topic = lastUserMessage?.content.trim().slice(0, 80) ?? 'your question'
     const opener = MOCK_REPLIES[messages.length % MOCK_REPLIES.length]
-    const content = `${opener}\n\nRegarding "${topic}": this is a simulated response from Demo Mode — no external AI provider was called.`
+    const content = `${opener}\n\nRegarding "${topic}": this is a placeholder response — no AI provider is configured for this account yet. Set AI_PROVIDER and OPENAI_API_KEY to enable real AI replies.`
 
     const promptTokens = Math.ceil(messages.reduce((sum, message) => sum + message.content.length, 0) / 4)
     const completionTokens = Math.ceil(content.length / 4)

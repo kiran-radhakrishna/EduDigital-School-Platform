@@ -172,12 +172,12 @@ export default function ChildDashboard() {
 
       case 'academic':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Grades by Subject</h3>
             <div className="space-y-3">
               {grades.length > 0 ? (
                 grades.map((grade) => (
-                  <div key={grade.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-dark-700">
+                  <div key={grade.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">{grade.subject}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{grade.date}</p>
@@ -199,12 +199,12 @@ export default function ChildDashboard() {
 
       case 'homework':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Homework Assignments</h3>
             <div className="space-y-3">
               {homework.length > 0 ? (
                 homework.map((hw) => (
-                  <div key={hw.id} className="p-3 bg-gray-50 rounded-lg dark:bg-dark-700">
+                  <div key={hw.id} className="p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{hw.title}</p>
@@ -229,23 +229,23 @@ export default function ChildDashboard() {
 
       case 'attendance':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Attendance Record</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-dark-700">
+                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Present</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{progress.attendance.presentDays}</p>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-dark-700">
+                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Absent</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">{progress.attendance.absentDays}</p>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-dark-700">
+                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Late</p>
                   <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{progress.attendance.lateDays}</p>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-dark-700">
+                <div className="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Excused</p>
                   <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{progress.attendance.excusedDays}</p>
                 </div>
@@ -256,12 +256,12 @@ export default function ChildDashboard() {
 
       case 'events':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Registered Events</h3>
             <div className="space-y-3">
               {events.length > 0 ? (
                 events.map((event) => (
-                  <div key={event.id} className="p-3 bg-gray-50 rounded-lg dark:bg-dark-700">
+                  <div key={event.id} className="p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{event.title}</p>
@@ -282,10 +282,10 @@ export default function ChildDashboard() {
 
       case 'portfolio':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Digital Portfolio</h3>
             <button
-              onClick={() => navigate(`/student/portfolio?childId=${childId}`)}
+              onClick={() => navigate('/parent/profile')}
               className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 transition-colors"
             >
               View Full Portfolio
@@ -301,7 +301,7 @@ export default function ChildDashboard() {
 
       case 'calendar':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">School Calendar</h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm">Calendar view coming soon</p>
           </div>
@@ -309,12 +309,12 @@ export default function ChildDashboard() {
 
       case 'achievements':
         return (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-dark-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Certificates & Achievements</h3>
             <div className="space-y-3">
               {certificates.length > 0 ? (
                 certificates.map((cert) => (
-                  <div key={cert.id} className="p-3 bg-gray-50 rounded-lg dark:bg-dark-700">
+                  <div key={cert.id} className="p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                     <p className="font-medium text-gray-900 dark:text-white">{cert.title}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{cert.issuer} • {cert.issuedDate}</p>
                   </div>
@@ -332,14 +332,14 @@ export default function ChildDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-dark-800 sticky top-0 z-10">
+      <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sticky top-0 z-10">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => navigate('/parent/dashboard')}
-              className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors"
+              className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -368,7 +368,7 @@ export default function ChildDashboard() {
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-primary-500 text-white'
-                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-700'
+                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     }`}
                   >
                     <Icon className="h-4 w-4" />

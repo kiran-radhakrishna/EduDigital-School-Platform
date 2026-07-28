@@ -33,7 +33,7 @@ export function ChildCard({ child, progress, onOpen }: ChildCardProps) {
   }[wellbeingStatus]
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-primary-400 dark:border-gray-700 dark:bg-dark-800">
+    <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-primary-400 dark:border-gray-700 dark:bg-gray-800">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -52,19 +52,19 @@ export function ChildCard({ child, progress, onOpen }: ChildCardProps) {
       {/* Stats Grid */}
       <div className="mb-4 grid grid-cols-2 gap-3">
         {/* Attendance */}
-        <div className="rounded-lg bg-gray-50 p-3 dark:bg-dark-700">
+        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
           <p className="text-xs text-gray-600 dark:text-gray-400">Attendance</p>
           <p className="text-lg font-bold text-gray-900 dark:text-white">{progress?.attendance.percentage}%</p>
         </div>
 
         {/* GPA */}
-        <div className="rounded-lg bg-gray-50 p-3 dark:bg-dark-700">
+        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
           <p className="text-xs text-gray-600 dark:text-gray-400">Current GPA</p>
           <p className="text-lg font-bold text-gray-900 dark:text-white">{child.currentGPA.toFixed(1)}</p>
         </div>
 
         {/* Homework */}
-        <div className="rounded-lg bg-gray-50 p-3 dark:bg-dark-700">
+        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
           <p className="text-xs text-gray-600 dark:text-gray-400">Homework</p>
           <p className="text-lg font-bold text-gray-900 dark:text-white">
             {progress?.homework.completed}/{progress?.homework.total}

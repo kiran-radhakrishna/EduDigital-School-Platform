@@ -60,7 +60,9 @@ export default function TeacherDashboard() {
       .then((count) => {
         if (!cancelled) setUnreadNotifications(count)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load your notification count.')
+      })
 
     dashboardApi
       .getTeacherDashboard(user.id)
@@ -69,7 +71,9 @@ export default function TeacherDashboard() {
         setPendingGradingCount(dashboard.pendingGradingCount)
         setPendingAttendanceCount(dashboard.pendingAttendanceCount)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load your dashboard stats.')
+      })
 
     return () => {
       cancelled = true

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import toast from 'react-hot-toast'
 import { WellbeingContext, type WellbeingContextValue } from './wellbeing-context'
 import { useAuth } from '../hooks/useAuth'
 import type { UserRole } from '../types'
@@ -195,7 +196,7 @@ function RealWellbeingProvider({ role, children }: { role: UserRole; children: R
         setCompletedToday(status.completedToday)
         setSkippedToday(status.skippedToday)
       })
-      .catch(() => {})
+      .catch(() => toast.error('Could not save your check-in. Please try again.'))
   }, [])
 
   const saveManualAssessment = useCallback((emotion: WellbeingEmotion) => {
@@ -217,7 +218,7 @@ function RealWellbeingProvider({ role, children }: { role: UserRole; children: R
         setCompletedToday(status.completedToday)
         setSkippedToday(status.skippedToday)
       })
-      .catch(() => {})
+      .catch(() => toast.error('Could not save your check-in. Please try again.'))
   }, [])
 
   const skipToday = useCallback(() => {
@@ -226,7 +227,7 @@ function RealWellbeingProvider({ role, children }: { role: UserRole; children: R
       .then((status) => {
         setSkippedToday(status.skippedToday)
       })
-      .catch(() => {})
+      .catch(() => toast.error("Could not skip today's check-in. Please try again."))
   }, [])
 
   const value = useMemo<WellbeingContextValue>(

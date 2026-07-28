@@ -63,7 +63,9 @@ export default function StudyPlanner() {
       .then((plans) => {
         if (!cancelled && plans.length > 0) setAiPlan(plans[0])
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load your saved study plan.')
+      })
     return () => {
       cancelled = true
     }

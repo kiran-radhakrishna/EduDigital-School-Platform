@@ -13,7 +13,7 @@ export function ChildMessagesTab({ messages }: ChildMessagesTabProps) {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className="flex gap-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-dark-800"
+              className="flex gap-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
             >
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900">
                 <Mail className="h-6 w-6 text-primary-600 dark:text-primary-400" />
@@ -32,7 +32,7 @@ export function ChildMessagesTab({ messages }: ChildMessagesTabProps) {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-dark-700">
+        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-700">
           <Mail className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">No messages yet</p>
         </div>

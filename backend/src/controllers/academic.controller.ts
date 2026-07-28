@@ -2,12 +2,27 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { parseOrThrow } from '../utils/validate'
 import { AppError } from '../utils/errors'
+import { getUserSchoolId } from '../services/resolvers'
 import * as academicService from '../services/academic.service'
+
+function isPrivileged(req: Request): boolean {
+  return req.userRole === 'ADMINISTRATOR' || req.userRole === 'AUTHORITY'
+}
+
+async function assertCanAccessSchool(req: Request, schoolId: string): Promise<void> {
+  if (isPrivileged(req)) return
+
+  const userSchoolId = req.userId ? await getUserSchoolId(req.userId) : null
+  if (userSchoolId !== schoolId) {
+    throw new AppError("You do not have permission to access this school's data.", 403)
+  }
+}
 
 const schoolIdQuerySchema = z.object({ schoolId: z.string().min(1) })
 
 export async function listSubjects(req: Request, res: Response): Promise<void> {
   const { schoolId } = parseOrThrow(schoolIdQuerySchema, req.query)
+  await assertCanAccessSchool(req, schoolId)
   const subjects = await academicService.listSubjects(schoolId)
   res.status(200).json({ subjects })
 }
@@ -31,12 +46,14 @@ const listClassesQuerySchema = z.object({
 
 export async function listClasses(req: Request, res: Response): Promise<void> {
   const { schoolId, academicYearId } = parseOrThrow(listClassesQuerySchema, req.query)
+  await assertCanAccessSchool(req, schoolId)
   const classes = await academicService.listClasses(schoolId, academicYearId)
   res.status(200).json({ classes })
 }
 
 export async function getClassById(req: Request, res: Response): Promise<void> {
   const schoolClass = await academicService.getClassById(req.params.id)
+  await assertCanAccessSchool(req, schoolClass.schoolId)
   res.status(200).json({ class: schoolClass })
 }
 

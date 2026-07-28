@@ -10,10 +10,10 @@ describe('MockProvider', () => {
     expect(result.content.length).toBeGreaterThan(0)
   })
 
-  it('echoes the last user message in the reply, clearly labeled as simulated', async () => {
+  it('echoes the last user message in the reply, clearly labeled as a placeholder', async () => {
     const result = await provider.generateReply([{ role: 'user', content: 'Explain fractions' }], options)
     expect(result.content).toContain('Explain fractions')
-    expect(result.content).toMatch(/simulated|demo mode/i)
+    expect(result.content).toMatch(/placeholder/i)
   })
 
   it('reports non-zero, roughly length-proportional token counts', async () => {

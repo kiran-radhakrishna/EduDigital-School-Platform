@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { Bell, GraduationCap, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Avatar } from '../common/Avatar'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -32,7 +33,9 @@ export default function Topbar({ onMenuClick, title }: TopbarProps) {
       .then((count) => {
         if (!cancelled) setHasUnread(count > 0)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not check for new notifications.')
+      })
 
     return () => {
       cancelled = true

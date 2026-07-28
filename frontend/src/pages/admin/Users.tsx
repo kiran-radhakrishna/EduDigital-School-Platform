@@ -101,7 +101,10 @@ export default function AdminUsers() {
 
   useEffect(() => {
     if (isDemoMode) return
-    void schoolApi.list().then(setSchools).catch(() => {})
+    void schoolApi
+      .list()
+      .then(setSchools)
+      .catch(() => toast.error('Could not load the list of schools.'))
   }, [isDemoMode])
 
   const currentListParams = () => ({

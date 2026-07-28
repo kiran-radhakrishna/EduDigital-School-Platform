@@ -41,7 +41,9 @@ export default function ClassWorkspace() {
       .then((summary) => {
         if (!cancelled) setWellbeingData(summary)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load class wellbeing data.')
+      })
     return () => {
       cancelled = true
     }
@@ -166,7 +168,7 @@ export default function ClassWorkspace() {
             <ClassStudentsTab
               students={classData.students}
               onOpenPortfolio={(studentId) => {
-                navigate(`/profile?studentId=${studentId}`)
+                navigate(`/teacher/profile?studentId=${studentId}`)
               }}
             />
           )}

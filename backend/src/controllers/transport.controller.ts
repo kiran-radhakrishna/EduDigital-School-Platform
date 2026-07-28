@@ -2,11 +2,20 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { parseOrThrow } from '../utils/validate'
 import { ForbiddenError } from '../utils/errors'
-import { isParentOfStudent, resolveStudentId } from '../services/resolvers'
+import { getUserSchoolId, isParentOfStudent, resolveStudentId } from '../services/resolvers'
 import * as transportService from '../services/transport.service'
 
 function isPrivileged(req: Request): boolean {
   return req.userRole === 'ADMINISTRATOR' || req.userRole === 'AUTHORITY'
+}
+
+async function assertCanAccessSchool(req: Request, schoolId: string): Promise<void> {
+  if (isPrivileged(req)) return
+
+  const userSchoolId = req.userId ? await getUserSchoolId(req.userId) : null
+  if (userSchoolId !== schoolId) {
+    throw new ForbiddenError("You do not have permission to access this school's data.")
+  }
 }
 
 async function assertCanViewStudentTransport(req: Request, studentUserId: string): Promise<void> {
@@ -106,6 +115,7 @@ export async function listRoutes(req: Request, res: Response): Promise<void> {
 
 export async function getRouteById(req: Request, res: Response): Promise<void> {
   const route = await transportService.getRouteById(req.params.id)
+  await assertCanAccessSchool(req, route.schoolId)
   res.status(200).json({ route })
 }
 

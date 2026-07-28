@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { StudentPortfolioView } from '../../components/portfolio/StudentPortfolioView'
 import { useAuth } from '../../hooks/useAuth'
@@ -7,9 +8,11 @@ const parentStudentId = 'student-krn'
 
 export default function ProfilePage() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const requestedStudentId = searchParams.get('studentId')
   const [selectedStudentId, setSelectedStudentId] = useState<string>(
     user?.role === 'teacher' || user?.role === 'admin'
-      ? 'student-krn'
+      ? (requestedStudentId ?? 'student-krn')
       : user?.role === 'parent'
         ? parentStudentId
         : user?.id ?? 'student-krn',
