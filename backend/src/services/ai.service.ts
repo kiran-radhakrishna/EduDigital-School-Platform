@@ -35,6 +35,14 @@ export interface SendMessageInput {
   schoolId: string | null
   conversationId?: string
   message: string
+  /** Which AI feature this belongs to (tutor, homework, study-planner, ...). Ignored when continuing an existing conversation. */
+  feature?: string
+  /**
+   * Hidden instructions injected as a SYSTEM message when a NEW conversation is created (e.g. persona +
+   * role-appropriate data context for a feature). Ignored when continuing an existing conversation, since
+   * the system framing was already set for that thread.
+   */
+  systemContext?: string
 }
 
 export async function sendMessage(input: SendMessageInput) {
@@ -47,8 +55,15 @@ export async function sendMessage(input: SendMessageInput) {
           provider: env.aiProvider,
           model: modelForProvider(env.aiProvider),
           title: input.message.trim().slice(0, 60),
+          feature: input.feature ?? null,
         },
       })
+
+  if (!input.conversationId && input.systemContext) {
+    await prisma.aIMessage.create({
+      data: { conversationId: conversation.id, role: 'SYSTEM', content: input.systemContext },
+    })
+  }
 
   await prisma.aIMessage.create({
     data: { conversationId: conversation.id, role: 'USER', content: input.message },
@@ -92,11 +107,11 @@ export async function sendMessage(input: SendMessageInput) {
   return { conversation, message: assistantMessage }
 }
 
-export async function listConversations(userId: string) {
+export async function listConversations(userId: string, feature?: string) {
   return prisma.aIConversation.findMany({
-    where: { userId },
+    where: { userId, ...(feature ? { feature } : {}) },
     orderBy: { updatedAt: 'desc' },
-    select: { id: true, title: true, provider: true, model: true, createdAt: true, updatedAt: true },
+    select: { id: true, title: true, provider: true, model: true, feature: true, createdAt: true, updatedAt: true },
   })
 }
 

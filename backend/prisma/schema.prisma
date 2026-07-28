@@ -430,6 +430,7 @@ model User {
 
   aiConversations AIConversation[]
   aiUsageRecords  AIUsage[]
+  studyPlans      StudyPlan[]
 
   @@index([schoolId])
 }
@@ -907,14 +908,20 @@ model AIConversation {
   title     String?
   provider  String
   model     String
+  // Which AI feature (tutor, homework, study-planner, career, teacher, parent, admin, ...) this
+  // thread belongs to, so each feature's page can list only its own conversations. Null for
+  // conversations created via the generic Phase 7A /ai/chat endpoint.
+  feature   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  messages AIMessage[]
-  usage    AIUsage[]
+  messages   AIMessage[]
+  usage      AIUsage[]
+  studyPlans StudyPlan[]
 
   @@index([userId])
   @@index([schoolId])
+  @@index([userId, feature])
 }
 
 model AIMessage {
@@ -946,4 +953,16 @@ model AIUsage {
 
   @@index([userId, createdAt])
   @@index([schoolId, createdAt])
+}
+
+model StudyPlan {
+  id             String          @id @default(cuid())
+  studentUserId  String
+  student        User            @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  content        String
+  createdAt      DateTime        @default(now())
+
+  @@index([studentUserId, createdAt])
 }

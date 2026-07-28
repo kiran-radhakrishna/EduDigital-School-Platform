@@ -22,6 +22,7 @@ const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
 const StudentDashboard = lazy(() => import('./pages/dashboard/StudentDashboard'))
 const TeacherDashboard = lazy(() => import('./pages/teacher/Dashboard'))
 const ClassWorkspace = lazy(() => import('./pages/teacher/ClassWorkspace'))
+const TeacherAI = lazy(() => import('./pages/teacher/TeacherAI'))
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'))
 const AdminSchools = lazy(() => import('./pages/admin/Schools'))
 const AdminUsers = lazy(() => import('./pages/admin/Users'))
@@ -30,8 +31,10 @@ const AdminInventory = lazy(() => import('./pages/admin/Inventory'))
 const AdminStaff = lazy(() => import('./pages/admin/Staff'))
 const AdminFees = lazy(() => import('./pages/admin/Fees'))
 const AdminTransport = lazy(() => import('./pages/admin/Transport'))
+const AdminAIInsights = lazy(() => import('./pages/admin/AIInsights'))
 const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'))
 const ChildDashboard = lazy(() => import('./pages/parent/ChildDashboard'))
+const ParentAI = lazy(() => import('./pages/parent/ParentAI'))
 
 // Shared dashboard pages
 const Profile = lazy(() => import('./pages/dashboard/Profile'))
@@ -120,6 +123,7 @@ function App() {
                 <Route path="subjects"      element={<Subjects />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="events"        element={<TeacherEventsDashboard />} />
+                <Route path="ai-assistant"  element={<TeacherAI />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />
                 <Route index element={<Navigate replace to="dashboard" />} />
@@ -136,6 +140,7 @@ function App() {
                 <Route path="transport"     element={<Transport />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="events"        element={<ParentChildEvents />} />
+                <Route path="ai-assistant"  element={<ParentAI />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />
                 <Route index element={<Navigate replace to="dashboard" />} />
@@ -153,6 +158,7 @@ function App() {
                 <Route path="transport"     element={<AdminTransport />} />
                 <Route path="subjects"      element={<Subjects />} />
                 <Route path="events"        element={<AuthorityEventsManagement />} />
+                <Route path="ai-insights"   element={<AdminAIInsights />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="profile"       element={<Profile />} />
                 <Route path="settings"      element={<Settings />} />

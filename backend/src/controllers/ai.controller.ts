@@ -26,8 +26,11 @@ export async function sendChatMessage(req: Request, res: Response): Promise<void
   res.status(201).json(result)
 }
 
+const listConversationsQuerySchema = z.object({ feature: z.string().min(1).optional() })
+
 export async function listConversations(req: Request, res: Response): Promise<void> {
-  const conversations = await aiService.listConversations(requireUserId(req))
+  const { feature } = parseOrThrow(listConversationsQuerySchema, req.query)
+  const conversations = await aiService.listConversations(requireUserId(req), feature)
   res.status(200).json({ conversations })
 }
 

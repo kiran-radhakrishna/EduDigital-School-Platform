@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
-import { BookMarked, CheckCircle2, Circle, Flame, Plus, Target } from 'lucide-react'
+import { BookMarked, CheckCircle2, Circle, Flame, Plus, RefreshCw, Sparkles, Target } from 'lucide-react'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 import { ProgressBar } from '../../components/common/ProgressBar'
 import { STUDY_PLAN } from '../../data/studentData'
+import { useAuth } from '../../hooks/useAuth'
+import { aiApi, type StudyPlan as AIStudyPlan } from '../../services/aiApi'
+import { getDemoStudyPlan } from '../../utils/demoAiResponses'
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -45,7 +49,44 @@ const priorityColor: Record<string, string> = {
 }
 
 export default function StudyPlanner() {
+  const { isDemoMode } = useAuth()
   const [tasks, setTasks] = useState(INIT_TASKS)
+  const [aiPlan, setAiPlan] = useState<AIStudyPlan | null>(null)
+  const [demoPlanText, setDemoPlanText] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
+
+  useEffect(() => {
+    if (isDemoMode) return
+    let cancelled = false
+    aiApi
+      .listStudyPlans()
+      .then((plans) => {
+        if (!cancelled && plans.length > 0) setAiPlan(plans[0])
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [isDemoMode])
+
+  const generatePlan = async () => {
+    setGenerating(true)
+    try {
+      if (isDemoMode) {
+        await new Promise((resolve) => setTimeout(resolve, 900))
+        setDemoPlanText(getDemoStudyPlan())
+      } else {
+        const result = await aiApi.generateStudyPlan()
+        setAiPlan(result.plan)
+      }
+    } catch {
+      toast.error('Could not generate a study plan right now. Please try again.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const planText = isDemoMode ? demoPlanText : aiPlan?.content ?? null
 
   const toggle = (id: string) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
@@ -69,6 +110,35 @@ export default function StudyPlanner() {
             {STUDY_PLAN.studyStreak} day streak
           </span>
         </div>
+      </motion.div>
+
+      {/* AI-generated plan */}
+      <motion.div
+        variants={item}
+        className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800"
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-purple-600" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">AI-Generated Plan</h2>
+          </div>
+          <button
+            type="button"
+            disabled={generating}
+            onClick={generatePlan}
+            className="flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50"
+          >
+            <RefreshCw className={clsx('h-3.5 w-3.5', generating && 'animate-spin')} />
+            {planText ? 'Regenerate' : 'Generate with AI'}
+          </button>
+        </div>
+        {planText ? (
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">{planText}</p>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Generate a personalized plan based on your attendance, grades, assignments, and timetable.
+          </p>
+        )}
       </motion.div>
 
       {/* Progress cards */}

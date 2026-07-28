@@ -8,10 +8,14 @@ import { ClassAttendanceTab } from '../../components/teacher/ClassAttendanceTab'
 import { ClassWellbeingTab } from '../../components/teacher/ClassWellbeingTab'
 import { AssignmentsPanel } from '../../components/teacher/AssignmentsPanel'
 import { GradesPanel } from '../../components/teacher/GradesPanel'
+import AIChatPanel from '../../components/ai/AIChatPanel'
 import { getClassById, getClassWellbeing as getClassWellbeingMock } from '../../services/teacherService'
 import { classApi } from '../../services/classApi'
 import { wellbeingApi } from '../../services/wellbeingApi'
+import { aiApi } from '../../services/aiApi'
+import { getGenericDemoResponse } from '../../utils/demoAiResponses'
 import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
 import type { TeacherClass, WellbeingAnonymousData } from '../../types/teacher'
 
 export default function ClassWorkspace() {
@@ -172,9 +176,22 @@ export default function ClassWorkspace() {
             />
           )}
           {activeTab === 'homework' && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Homework management coming soon
-            </div>
+            <AIChatPanel
+              heightClassName="h-[65vh]"
+              title="Homework Assistant · Teacher Mode"
+              subtitle={`${classData.subject} · full worked solutions`}
+              welcomeMessage={`Hi ${getCurrentUserIdentity(user, 'teacher').firstName}! Paste a homework question from ${classData.name} and I'll generate a full worked solution you can use for review or feedback.`}
+              placeholder="Paste a homework question…"
+              userAvatarLabel={getCurrentUserIdentity(user, 'teacher').avatar}
+              onSend={async (text, conversationId) => {
+                if (isDemoMode) {
+                  await new Promise((resolve) => setTimeout(resolve, 700))
+                  return { content: getGenericDemoResponse('homework', text) }
+                }
+                const result = await aiApi.homeworkChat(text, conversationId, 'teacher')
+                return { content: result.message.content, conversationId: result.conversation.id }
+              }}
+            />
           )}
           {activeTab === 'assignments' && classId && <AssignmentsPanel classId={classId} />}
           {activeTab === 'grades' && classId && <GradesPanel classId={classId} />}

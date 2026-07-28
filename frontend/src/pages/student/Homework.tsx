@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
-import { CheckCircle2, FileText, Filter, Search } from 'lucide-react'
+import { CheckCircle2, FileText, Filter, Search, Sparkles } from 'lucide-react'
 import clsx from 'clsx'
 import { ProgressBar } from '../../components/common/ProgressBar'
+import { Modal } from '../../components/common/Modal'
+import AIChatPanel from '../../components/ai/AIChatPanel'
 import { HOMEWORK, type HomeworkPriority } from '../../data/studentData'
+import { useAuth } from '../../hooks/useAuth'
+import { getCurrentUserIdentity } from '../../utils/helpers'
+import { getGenericDemoResponse } from '../../utils/demoAiResponses'
+import { aiApi } from '../../services/aiApi'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } }
 const item: Variants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } }
@@ -17,8 +23,11 @@ const priorityStyles: Record<HomeworkPriority, string> = {
 type FilterType = 'all' | HomeworkPriority
 
 export default function Homework() {
+  const { user, isDemoMode } = useAuth()
+  const currentUser = getCurrentUserIdentity(user, 'student')
   const [filter, setFilter] = useState<FilterType>('all')
   const [search, setSearch] = useState('')
+  const [helpFor, setHelpFor] = useState<{ id: string; title: string; subject: string } | null>(null)
 
   const filtered = HOMEWORK.filter((hw) => {
     const matchesPriority = filter === 'all' || hw.priority === filter
@@ -110,6 +119,15 @@ export default function Homework() {
                 <CheckCircle2 className="h-4 w-4" /> Completed!
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => setHelpFor({ id: hw.id, title: hw.title, subject: hw.subject })}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 transition hover:bg-purple-100 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-400"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Ask AI for Help
+            </button>
           </motion.div>
         ))}
       </div>
@@ -121,6 +139,27 @@ export default function Homework() {
           <p className="text-sm text-gray-500">Try changing your filter or search term</p>
         </motion.div>
       )}
+
+      <Modal isOpen={helpFor !== null} onClose={() => setHelpFor(null)} title={helpFor ? `Homework Help — ${helpFor.title}` : undefined} size="lg">
+        {helpFor && (
+          <AIChatPanel
+            heightClassName="h-[60vh]"
+            title="Homework Assistant"
+            subtitle={`${helpFor.subject} · paste your question or ask for a hint`}
+            welcomeMessage={`Hi ${currentUser.firstName}! Paste your homework question for "${helpFor.title}" and I'll help you work through it — I'll give hints and explanations, not the final answer, unless you ask for it directly.`}
+            placeholder="Paste your question or ask for a hint…"
+            userAvatarLabel={currentUser.avatar}
+            onSend={async (text, conversationId) => {
+              if (isDemoMode) {
+                await new Promise((resolve) => setTimeout(resolve, 700))
+                return { content: getGenericDemoResponse('homework', text) }
+              }
+              const result = await aiApi.homeworkChat(text, conversationId, 'student')
+              return { content: result.message.content, conversationId: result.conversation.id }
+            }}
+          />
+        )}
+      </Modal>
     </motion.div>
   )
 }

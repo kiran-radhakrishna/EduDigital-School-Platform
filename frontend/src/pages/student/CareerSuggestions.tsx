@@ -3,8 +3,11 @@ import { Briefcase } from 'lucide-react'
 import clsx from 'clsx'
 import { CAREER_SUGGESTIONS, GRADES } from '../../data/studentData'
 import { ProgressBar } from '../../components/common/ProgressBar'
+import AIChatPanel from '../../components/ai/AIChatPanel'
 import { useAuth } from '../../hooks/useAuth'
 import { getCurrentUserIdentity } from '../../utils/helpers'
+import { aiApi } from '../../services/aiApi'
+import { getGenericDemoResponse } from '../../utils/demoAiResponses'
 
 const container: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }
 const item: Variants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }
@@ -13,7 +16,7 @@ const avgGrade = Math.round(GRADES.reduce((s, g) => s + g.score, 0) / GRADES.len
 const topSubject = GRADES.reduce((top, g) => (g.score > top.score ? g : top), GRADES[0])
 
 export default function CareerSuggestions() {
-  const { user } = useAuth()
+  const { user, isDemoMode } = useAuth()
   const currentUser = getCurrentUserIdentity(user, 'student')
 
   return (
@@ -115,6 +118,27 @@ export default function CareerSuggestions() {
             </div>
           ))}
         </div>
+      </motion.div>
+
+      {/* Ask the Career Advisor */}
+      <motion.div variants={item} className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800">
+        <AIChatPanel
+          heightClassName="h-[28rem]"
+          icon={Briefcase}
+          title="Ask the Career Advisor"
+          subtitle="Tell it about your interests and strengths for more specific suggestions"
+          welcomeMessage={`Hi ${currentUser.firstName}! Ask me follow-up questions about any career path, or tell me more about your interests and strengths for more specific suggestions and university recommendations.`}
+          placeholder="Ask a follow-up question…"
+          userAvatarLabel={currentUser.avatar}
+          onSend={async (text, conversationId) => {
+            if (isDemoMode) {
+              await new Promise((resolve) => setTimeout(resolve, 800))
+              return { content: getGenericDemoResponse('career', text) }
+            }
+            const result = await aiApi.careerChat(text, conversationId)
+            return { content: result.message.content, conversationId: result.conversation.id }
+          }}
+        />
       </motion.div>
     </motion.div>
   )
