@@ -107,11 +107,12 @@ export async function sendMessage(input: SendMessageInput) {
   return { conversation, message: assistantMessage }
 }
 
-export async function listConversations(userId: string, feature?: string) {
+export async function listConversations(userId: string, feature?: string, limit = 50) {
   return prisma.aIConversation.findMany({
     where: { userId, ...(feature ? { feature } : {}) },
     orderBy: { updatedAt: 'desc' },
     select: { id: true, title: true, provider: true, model: true, feature: true, createdAt: true, updatedAt: true },
+    take: Math.min(Math.max(limit, 1), 100),
   })
 }
 

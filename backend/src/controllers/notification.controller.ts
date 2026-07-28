@@ -9,8 +9,11 @@ function requireUserId(req: Request): string {
   return req.userId
 }
 
+const listQuerySchema = z.object({ limit: z.coerce.number().int().positive().optional() })
+
 export async function list(req: Request, res: Response): Promise<void> {
-  const notifications = await notificationService.listNotifications(requireUserId(req))
+  const { limit } = parseOrThrow(listQuerySchema, req.query)
+  const notifications = await notificationService.listNotifications(requireUserId(req), limit)
   res.status(200).json({ notifications })
 }
 

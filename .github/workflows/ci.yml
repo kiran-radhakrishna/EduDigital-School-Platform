@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-build:
-    name: Lint & Build
+  frontend:
+    name: Frontend (lint, build, test)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,3 +33,41 @@ jobs:
 
       - name: Run build
         run: npm run build
+
+      - name: Run tests
+        run: npm run test
+
+  backend:
+    name: Backend (lint, build, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Test-only placeholders — the test suite mocks Prisma and never opens a real connection;
+      # these only need to satisfy env.ts's startup validation (see docs/ENVIRONMENT_VARIABLES.md).
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      JWT_SECRET: ci-test-secret-not-used-in-production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test

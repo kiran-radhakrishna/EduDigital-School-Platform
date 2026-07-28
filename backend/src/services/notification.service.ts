@@ -2,8 +2,12 @@ import type { NotificationType as PrismaNotificationType } from '@prisma/client'
 import { prisma } from '../config/prisma'
 import { NotFoundError } from '../utils/errors'
 
-export async function listNotifications(userId: string) {
-  return prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } })
+export async function listNotifications(userId: string, limit = 100) {
+  return prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: Math.min(Math.max(limit, 1), 200),
+  })
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {

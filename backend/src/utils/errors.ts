@@ -28,3 +28,10 @@ export class ConflictError extends AppError {
     this.name = 'ConflictError'
   }
 }
+
+export class AuthError extends AppError {
+  constructor(message: string, statusCode = 401) {
+    super(message, statusCode)
+    this.name = 'AuthError'
+  }
+}

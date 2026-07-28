@@ -41,4 +41,32 @@ export const authApi = {
     const { data } = await apiClient.get<AuthResponse>('/auth/me')
     return data.user
   },
+
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/forgot-password', { email })
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Could not process that request. Please try again.'), { cause: error })
+    }
+  },
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/reset-password', { token, password })
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Could not reset your password. Please try again.'), { cause: error })
+    }
+  },
+
+  async verifyEmail(token: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/verify-email', { token })
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Could not verify your email. Please try again.'), { cause: error })
+    }
+  },
+
+  async resendVerification(): Promise<void> {
+    await apiClient.post('/auth/resend-verification')
+  },
 }

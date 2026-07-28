@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle2, GraduationCap, Mail } from 'lucide-react'
 import { z } from 'zod'
 import { useLanguage } from '../../hooks/useLanguage'
+import { authApi } from '../../services/authApi'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -106,8 +107,10 @@ export default function ForgotPassword() {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
-  const onSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800))
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    // Always shows the same confirmation regardless of outcome — the backend responds
+    // identically whether or not the email is registered, to avoid leaking account existence.
+    await authApi.forgotPassword(data.email).catch(() => {})
     setSubmitted(true)
   }
 

@@ -22,4 +22,17 @@ export const env = {
   openaiModel: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
   aiMaxTokens: Number(process.env.MAX_TOKENS ?? 500),
   aiTemperature: Number(process.env.TEMPERATURE ?? 0.7),
+
+  // Sessions. Access tokens are short-lived and paired with a rotating refresh token
+  // (see services/session.service.ts) instead of one long-lived JWT.
+  accessTokenTtlSeconds: Number(process.env.ACCESS_TOKEN_TTL_SECONDS ?? 60 * 60 * 2), // 2 hours
+  refreshTokenTtlSeconds: Number(process.env.REFRESH_TOKEN_TTL_SECONDS ?? 60 * 60 * 24 * 30), // 30 days
+
+  // Used to build password-reset / email-verification links. Falls back to corsOrigin
+  // (the deployed frontend origin) so this never needs a separate env var in practice.
+  frontendUrl: process.env.FRONTEND_URL ?? process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+
+  // Surfaced on GET /version — Vercel sets this automatically at build time (blank when the
+  // project isn't Git-connected, which this backend currently isn't deployed as).
+  gitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
 }

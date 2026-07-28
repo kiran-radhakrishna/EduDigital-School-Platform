@@ -38,25 +38,6 @@ function splitNameParts(value: string): { firstName: string; lastName: string } 
   return { firstName, lastName: rest.join(' ') }
 }
 
-function formatNameToken(value: string): string {
-  if (!value) return ''
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-}
-
-function deriveNameFromEmail(email: string): { firstName: string; lastName: string } {
-  const localPart = email.split('@')[0] ?? ''
-  const tokens = localPart
-    .replace(/[^a-zA-Z0-9._-]/g, '')
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((token) => formatNameToken(token))
-
-  if (tokens.length === 0) return { firstName: 'User', lastName: '' }
-
-  const [firstName, ...rest] = tokens
-  return { firstName, lastName: rest.join(' ') }
-}
-
 function normalizeUser(user: User): User {
   const name = user.name.trim()
   const nameParts = splitNameParts(name)
@@ -96,24 +77,6 @@ function readStoredUser(): User | null {
   }
 }
 
-function buildUser(email: string, role: UserRole, name?: string): User {
-  const nameParts = name?.trim() ? splitNameParts(name) : deriveNameFromEmail(email)
-  const fullName = [nameParts.firstName, nameParts.lastName].filter(Boolean).join(' ')
-
-  return {
-    id: `${role}-${Date.now()}`,
-    firstName: nameParts.firstName,
-    lastName: nameParts.lastName,
-    name: fullName,
-    email: email.trim(),
-    role,
-    avatar: `${nameParts.firstName[0] ?? ''}${nameParts.lastName[0] ?? ''}`.toUpperCase() || 'U',
-    class: role === 'student' ? '10-A' : undefined,
-    subject: role === 'teacher' ? 'Mathematics' : undefined,
-    joinedAt: new Date().toISOString(),
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => readStoredUser())
 
@@ -142,8 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!password.trim()) throw new Error('Password is required.')
       if (!validRoles.has(role)) throw new Error('Invalid user role.')
 
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      setUser(buildUser(email, role, name))
+      const registeredUser = await authApi.register(name, email, password, role)
+      setUser(normalizeUser(registeredUser))
     },
     [],
   )

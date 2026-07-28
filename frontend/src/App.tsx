@@ -14,6 +14,8 @@ import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
+import VerifyEmail from './pages/auth/VerifyEmail'
 
 // Everything reached only after landing/auth is lazy-loaded into its own chunk
 const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
@@ -83,6 +85,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/wellbeing-check" element={<AIWellbeingCheck />} />
                 <Route path="/organizer/portal" element={<OrganizerPortal />} />
 
