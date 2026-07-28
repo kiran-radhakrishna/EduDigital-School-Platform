@@ -127,6 +127,12 @@ enum BusStatus {
   INACTIVE
 }
 
+enum AIMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
 model School {
   id        String   @id @default(cuid())
   name      String
@@ -157,6 +163,9 @@ model School {
   buses           Bus[]
   drivers         Driver[]
   routes          Route[]
+
+  aiConversations AIConversation[]
+  aiUsageRecords  AIUsage[]
 }
 
 model AcademicYear {
@@ -418,6 +427,9 @@ model User {
   bookIssues       BookIssue[]
   assetAssignments AssetAssignment[]
   staffProfile     Staff?
+
+  aiConversations AIConversation[]
+  aiUsageRecords  AIUsage[]
 
   @@index([schoolId])
 }
@@ -884,4 +896,54 @@ model StudentTransport {
 
   @@index([routeId])
   @@index([stopId])
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  title     String?
+  provider  String
+  model     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages AIMessage[]
+  usage    AIUsage[]
+
+  @@index([userId])
+  @@index([schoolId])
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           AIMessageRole
+  content        String
+  tokensUsed     Int?
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model AIUsage {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId         String?
+  school           School?         @relation(fields: [schoolId], references: [id])
+  conversationId   String?
+  conversation     AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  provider         String
+  model            String
+  promptTokens     Int             @default(0)
+  completionTokens Int             @default(0)
+  totalTokens      Int             @default(0)
+  createdAt        DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([schoolId, createdAt])
 }

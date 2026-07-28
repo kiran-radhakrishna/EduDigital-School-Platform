@@ -20,6 +20,7 @@ import { inventoryRouter } from './routes/inventory.routes'
 import { staffRouter } from './routes/staff.routes'
 import { feeRouter } from './routes/fee.routes'
 import { transportRouter } from './routes/transport.routes'
+import { aiRouter } from './routes/ai.routes'
 
 function isStatusCodedError(err: unknown): err is Error & { statusCode: number } {
   return (
@@ -57,6 +58,7 @@ export function createApp(): Express {
   app.use('/staff', staffRouter)
   app.use('/fees', feeRouter)
   app.use('/transport', transportRouter)
+  app.use('/ai', aiRouter)
   app.use('/', academicRouter)
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
