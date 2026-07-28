@@ -15,6 +15,11 @@ import { notificationRouter } from './routes/notification.routes'
 import { wellbeingRouter } from './routes/wellbeing.routes'
 import { analyticsRouter } from './routes/analytics.routes'
 import { dashboardRouter } from './routes/dashboard.routes'
+import { libraryRouter } from './routes/library.routes'
+import { inventoryRouter } from './routes/inventory.routes'
+import { staffRouter } from './routes/staff.routes'
+import { feeRouter } from './routes/fee.routes'
+import { transportRouter } from './routes/transport.routes'
 
 function isStatusCodedError(err: unknown): err is Error & { statusCode: number } {
   return (
@@ -47,6 +52,11 @@ export function createApp(): Express {
   app.use('/wellbeing', wellbeingRouter)
   app.use('/analytics', analyticsRouter)
   app.use('/dashboard', dashboardRouter)
+  app.use('/library', libraryRouter)
+  app.use('/inventory', inventoryRouter)
+  app.use('/staff', staffRouter)
+  app.use('/fees', feeRouter)
+  app.use('/transport', transportRouter)
   app.use('/', academicRouter)
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

@@ -67,6 +67,66 @@ enum WellbeingRiskLevel {
   HIGH
 }
 
+enum BookIssueStatus {
+  ISSUED
+  RETURNED
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  RETIRED
+}
+
+enum AssetAssignmentStatus {
+  ASSIGNED
+  RETURNED
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum StaffStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FeeFrequency {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+}
+
+enum BusStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
 model School {
   id        String   @id @default(cuid())
   name      String
@@ -84,6 +144,19 @@ model School {
   academicYears  AcademicYear[]
   subjects       Subject[]
   classes        SchoolClass[]
+
+  bookCategories  BookCategory[]
+  bookAuthors     BookAuthor[]
+  libraryBooks    LibraryBook[]
+  assetCategories AssetCategory[]
+  assets          Asset[]
+  departments     Department[]
+  designations    Designation[]
+  staff           Staff[]
+  feeStructures   FeeStructure[]
+  buses           Bus[]
+  drivers         Driver[]
+  routes          Route[]
 }
 
 model AcademicYear {
@@ -337,10 +410,14 @@ model User {
   authority     Authority?
   administrator Administrator?
 
-  notifications           Notification[]
-  notificationPreference  NotificationPreference?
-  wellbeingCheckIns       WellbeingCheckIn[]
-  wellbeingSkips          WellbeingSkip[]
+  notifications          Notification[]
+  notificationPreference NotificationPreference?
+  wellbeingCheckIns      WellbeingCheckIn[]
+  wellbeingSkips         WellbeingSkip[]
+
+  bookIssues       BookIssue[]
+  assetAssignments AssetAssignment[]
+  staffProfile     Staff?
 
   @@index([schoolId])
 }
@@ -361,6 +438,8 @@ model Student {
   attendanceRecords AttendanceRecord[]
   submissions       AssignmentSubmission[]
   grades            Grade[]
+  feeInvoices       FeeInvoice[]
+  transport         StudentTransport?
 
   @@index([schoolId])
 }
@@ -430,4 +509,379 @@ model Administrator {
   createdAt DateTime @default(now())
 
   @@index([schoolId])
+}
+
+// ─── Phase 6: Library ─────────────────────────────────────────────────────
+
+model BookCategory {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name     String
+
+  books LibraryBook[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model BookAuthor {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name     String
+
+  books LibraryBook[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model LibraryBook {
+  id                String        @id @default(cuid())
+  schoolId          String
+  school            School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title             String
+  isbn              String?
+  categoryId        String?
+  category          BookCategory? @relation(fields: [categoryId], references: [id])
+  authorId          String?
+  author            BookAuthor?   @relation(fields: [authorId], references: [id])
+  publishedYear     Int?
+  totalQuantity     Int           @default(1)
+  availableQuantity Int           @default(1)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  issues BookIssue[]
+
+  @@index([schoolId])
+  @@index([categoryId])
+  @@index([authorId])
+}
+
+model BookIssue {
+  id             String          @id @default(cuid())
+  bookId         String
+  book           LibraryBook     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  borrowerUserId String
+  borrower       User            @relation(fields: [borrowerUserId], references: [id], onDelete: Cascade)
+  issuedByUserId String
+  issueDate      DateTime        @default(now())
+  dueDate        DateTime
+  returnDate     DateTime?
+  status         BookIssueStatus @default(ISSUED)
+  createdAt      DateTime        @default(now())
+
+  fine BookFine?
+
+  @@index([bookId])
+  @@index([borrowerUserId])
+  @@index([status])
+}
+
+model BookFine {
+  id          String    @id @default(cuid())
+  bookIssueId String    @unique
+  bookIssue   BookIssue @relation(fields: [bookIssueId], references: [id], onDelete: Cascade)
+  amount      Float
+  reason      String    @default("Late return")
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// ─── Phase 6: Inventory ────────────────────────────────────────────────────
+
+model AssetCategory {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name     String
+
+  assets Asset[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model Asset {
+  id                String         @id @default(cuid())
+  schoolId          String
+  school            School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name              String
+  categoryId        String?
+  category          AssetCategory? @relation(fields: [categoryId], references: [id])
+  serialNumber      String?
+  status            AssetStatus    @default(AVAILABLE)
+  quantity          Int            @default(1)
+  availableQuantity Int            @default(1)
+  lowStockThreshold Int            @default(0)
+  purchaseDate      DateTime?
+  purchaseCost      Float?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  assignments AssetAssignment[]
+  maintenance AssetMaintenance[]
+
+  @@index([schoolId])
+  @@index([categoryId])
+}
+
+model AssetAssignment {
+  id               String                @id @default(cuid())
+  assetId          String
+  asset            Asset                 @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assignedToUserId String
+  assignedTo       User                  @relation(fields: [assignedToUserId], references: [id], onDelete: Cascade)
+  quantity         Int                   @default(1)
+  assignedDate     DateTime              @default(now())
+  returnDate       DateTime?
+  condition        String?
+  status           AssetAssignmentStatus @default(ASSIGNED)
+  createdAt        DateTime              @default(now())
+
+  @@index([assetId])
+  @@index([assignedToUserId])
+}
+
+model AssetMaintenance {
+  id          String            @id @default(cuid())
+  assetId     String
+  asset       Asset             @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  description String
+  cost        Float?
+  startDate   DateTime          @default(now())
+  endDate     DateTime?
+  status      MaintenanceStatus @default(SCHEDULED)
+  createdAt   DateTime          @default(now())
+
+  @@index([assetId])
+}
+
+// ─── Phase 6: Staff & HR ────────────────────────────────────────────────────
+
+model Department {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name     String
+
+  staff Staff[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model Designation {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title    String
+
+  staff Staff[]
+
+  @@unique([schoolId, title])
+  @@index([schoolId])
+}
+
+model Staff {
+  id                    String       @id @default(cuid())
+  userId                String       @unique
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId              String
+  school                School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  departmentId          String?
+  department            Department?  @relation(fields: [departmentId], references: [id])
+  designationId         String?
+  designation           Designation? @relation(fields: [designationId], references: [id])
+  employeeCode          String?
+  hireDate              DateTime
+  status                StaffStatus  @default(ACTIVE)
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
+
+  @@index([schoolId])
+  @@index([departmentId])
+  @@index([designationId])
+}
+
+model LeaveRequest {
+  id               String      @id @default(cuid())
+  staffId          String
+  staff            Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  leaveType        String
+  startDate        DateTime
+  endDate          DateTime
+  reason           String?
+  status           LeaveStatus @default(PENDING)
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  createdAt        DateTime    @default(now())
+
+  @@index([staffId])
+  @@index([status])
+}
+
+model LeaveBalance {
+  id        String @id @default(cuid())
+  staffId   String
+  staff     Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  leaveType String
+  year      Int
+  totalDays Int
+  usedDays  Int    @default(0)
+
+  @@unique([staffId, leaveType, year])
+  @@index([staffId])
+}
+
+// ─── Phase 6: Fee Management ────────────────────────────────────────────────
+
+model FeeStructure {
+  id             String       @id @default(cuid())
+  schoolId       String
+  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name           String
+  grade          String?
+  amount         Float
+  frequency      FeeFrequency @default(ANNUAL)
+  academicYearId String?
+  createdAt      DateTime     @default(now())
+
+  invoices FeeInvoice[]
+
+  @@index([schoolId])
+}
+
+model FeeInvoice {
+  id             String        @id @default(cuid())
+  studentId      String
+  student        Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructureId String
+  feeStructure   FeeStructure  @relation(fields: [feeStructureId], references: [id])
+  amount         Float
+  lateFine       Float         @default(0)
+  dueDate        DateTime
+  status         InvoiceStatus @default(PENDING)
+  issuedAt       DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+
+  payments     FeePayment[]
+  installments FeeInstallment[]
+
+  @@index([studentId])
+  @@index([feeStructureId])
+  @@index([status])
+}
+
+model FeePayment {
+  id               String     @id @default(cuid())
+  invoiceId        String
+  invoice          FeeInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount           Float
+  method           String     @default("CASH")
+  receiptNumber    String     @unique
+  receivedByUserId String?
+  paymentDate      DateTime   @default(now())
+  createdAt        DateTime   @default(now())
+
+  @@index([invoiceId])
+}
+
+model FeeInstallment {
+  id                String            @id @default(cuid())
+  invoiceId         String
+  invoice           FeeInvoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  installmentNumber Int
+  amount            Float
+  dueDate           DateTime
+  status            InstallmentStatus @default(PENDING)
+  paidAt            DateTime?
+
+  @@unique([invoiceId, installmentNumber])
+  @@index([invoiceId])
+}
+
+// ─── Phase 6: Transport ─────────────────────────────────────────────────────
+
+model Bus {
+  id          String    @id @default(cuid())
+  schoolId    String
+  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  plateNumber String
+  capacity    Int
+  model       String?
+  status      BusStatus @default(ACTIVE)
+  driverId    String?
+  driver      Driver?   @relation(fields: [driverId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  routes Route[]
+
+  @@index([schoolId])
+}
+
+model Driver {
+  id            String   @id @default(cuid())
+  schoolId      String
+  school        School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name          String
+  phone         String?
+  licenseNumber String?
+  createdAt     DateTime @default(now())
+
+  buses Bus[]
+
+  @@index([schoolId])
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name        String
+  busId       String?
+  bus         Bus?     @relation(fields: [busId], references: [id])
+  description String?
+  createdAt   DateTime @default(now())
+
+  stops              Stop[]
+  studentAssignments StudentTransport[]
+
+  @@index([schoolId])
+  @@index([busId])
+}
+
+model Stop {
+  id            String  @id @default(cuid())
+  routeId       String
+  route         Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  name          String
+  sequenceOrder Int
+  pickupTime    String?
+
+  studentAssignments StudentTransport[]
+
+  @@index([routeId])
+}
+
+model StudentTransport {
+  id        String   @id @default(cuid())
+  studentId String   @unique
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  routeId   String
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stopId    String
+  stop      Stop     @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([routeId])
+  @@index([stopId])
 }

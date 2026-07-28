@@ -108,6 +108,73 @@ export interface SchoolAnalytics {
   }
 }
 
+export interface MonthlyCollectionPoint {
+  month: string
+  amount: number
+}
+
+export interface RevenueByClassPoint {
+  className: string
+  amount: number
+}
+
+export interface FinanceAnalytics {
+  totalRevenue: number
+  pendingFees: number
+  paidFees: number
+  monthlyCollections: MonthlyCollectionPoint[]
+  revenueByClass: RevenueByClassPoint[]
+  revenueBySchool: { schoolId: string; total: number }
+}
+
+export async function getFinanceAnalytics(schoolId: string): Promise<FinanceAnalytics> {
+  const invoices = await prisma.feeInvoice.findMany({
+    where: { student: { schoolId } },
+    include: {
+      payments: true,
+      student: {
+        include: { enrollments: { include: { class: true }, orderBy: { createdAt: 'desc' }, take: 1 } },
+      },
+    },
+  })
+
+  let totalRevenue = 0
+  let pendingFees = 0
+  const monthlyMap = new Map<string, number>()
+  const classMap = new Map<string, number>()
+
+  for (const invoice of invoices) {
+    const paid = invoice.payments.reduce((sum, payment) => sum + payment.amount, 0)
+    totalRevenue += paid
+    pendingFees += Math.max(0, invoice.amount + invoice.lateFine - paid)
+
+    const className = invoice.student.enrollments[0]?.class.name ?? 'Unassigned'
+    classMap.set(className, (classMap.get(className) ?? 0) + paid)
+
+    for (const payment of invoice.payments) {
+      const monthKey = payment.paymentDate.toISOString().slice(0, 7)
+      monthlyMap.set(monthKey, (monthlyMap.get(monthKey) ?? 0) + payment.amount)
+    }
+  }
+
+  const monthlyCollections = Array.from(monthlyMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, amount]) => ({ month, amount: Math.round(amount * 100) / 100 }))
+
+  const revenueByClass = Array.from(classMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([className, amount]) => ({ className, amount: Math.round(amount * 100) / 100 }))
+
+  return {
+    totalRevenue: Math.round(totalRevenue * 100) / 100,
+    pendingFees: Math.round(pendingFees * 100) / 100,
+    paidFees: Math.round(totalRevenue * 100) / 100,
+    monthlyCollections,
+    revenueByClass,
+    revenueBySchool: { schoolId, total: Math.round(totalRevenue * 100) / 100 },
+  }
+}
+
 export async function getSchoolAnalytics(schoolId: string): Promise<SchoolAnalytics> {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)

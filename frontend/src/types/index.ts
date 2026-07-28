@@ -20,6 +20,8 @@ export interface User {
   phone?: string
   bio?: string
   joinedAt?: string
+  schoolId?: string
+  schoolName?: string
 }
 
 export type AssignmentStatus = 'pending' | 'submitted' | 'graded'

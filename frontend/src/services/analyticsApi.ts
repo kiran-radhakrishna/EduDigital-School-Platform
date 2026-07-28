@@ -40,9 +40,33 @@ export interface SchoolAnalytics {
   }
 }
 
+export interface MonthlyCollectionPoint {
+  month: string
+  amount: number
+}
+
+export interface RevenueByClassPoint {
+  className: string
+  amount: number
+}
+
+export interface FinanceAnalytics {
+  totalRevenue: number
+  pendingFees: number
+  paidFees: number
+  monthlyCollections: MonthlyCollectionPoint[]
+  revenueByClass: RevenueByClassPoint[]
+  revenueBySchool: { schoolId: string; total: number }
+}
+
 export const analyticsApi = {
   async getMySchoolAnalytics(): Promise<SchoolAnalytics> {
     const { data } = await apiClient.get<{ analytics: SchoolAnalytics }>('/analytics/school')
+    return data.analytics
+  },
+
+  async getMyFinanceAnalytics(): Promise<FinanceAnalytics> {
+    const { data } = await apiClient.get<{ analytics: FinanceAnalytics }>('/analytics/finance')
     return data.analytics
   },
 }

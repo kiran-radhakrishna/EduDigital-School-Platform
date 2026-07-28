@@ -25,6 +25,11 @@ const ClassWorkspace = lazy(() => import('./pages/teacher/ClassWorkspace'))
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'))
 const AdminSchools = lazy(() => import('./pages/admin/Schools'))
 const AdminUsers = lazy(() => import('./pages/admin/Users'))
+const AdminLibrary = lazy(() => import('./pages/admin/Library'))
+const AdminInventory = lazy(() => import('./pages/admin/Inventory'))
+const AdminStaff = lazy(() => import('./pages/admin/Staff'))
+const AdminFees = lazy(() => import('./pages/admin/Fees'))
+const AdminTransport = lazy(() => import('./pages/admin/Transport'))
 const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'))
 const ChildDashboard = lazy(() => import('./pages/parent/ChildDashboard'))
 
@@ -37,6 +42,8 @@ const Attendance = lazy(() => import('./pages/dashboard/Attendance'))
 const Assignments = lazy(() => import('./pages/dashboard/Assignments'))
 const Subjects = lazy(() => import('./pages/dashboard/Subjects'))
 const Grades = lazy(() => import('./pages/dashboard/Grades'))
+const Fees = lazy(() => import('./pages/dashboard/Fees'))
+const Transport = lazy(() => import('./pages/dashboard/Transport'))
 
 // Student-specific pages
 const StudyPlanner = lazy(() => import('./pages/student/StudyPlanner'))
@@ -86,6 +93,8 @@ function App() {
                 <Route path="attendance"             element={<Attendance />} />
                 <Route path="timetable"              element={<Timetable />} />
                 <Route path="grades"                 element={<Grades />} />
+                <Route path="fees"                   element={<Fees />} />
+                <Route path="transport"              element={<Transport />} />
                 <Route path="achievements"           element={<Achievements />} />
                 <Route path="leaderboard"            element={<Leaderboard />} />
                 <Route path="ai-tutor"               element={<AITutor />} />
@@ -123,6 +132,8 @@ function App() {
                 <Route path="grades"        element={<Grades />} />
                 <Route path="attendance"    element={<Attendance />} />
                 <Route path="timetable"     element={<Timetable />} />
+                <Route path="fees"          element={<Fees />} />
+                <Route path="transport"     element={<Transport />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="events"        element={<ParentChildEvents />} />
                 <Route path="profile"       element={<Profile />} />
@@ -135,6 +146,11 @@ function App() {
                 <Route path="dashboard"     element={<AdminDashboard />} />
                 <Route path="schools"       element={<AdminSchools />} />
                 <Route path="users"         element={<AdminUsers />} />
+                <Route path="library"       element={<AdminLibrary />} />
+                <Route path="inventory"     element={<AdminInventory />} />
+                <Route path="staff"         element={<AdminStaff />} />
+                <Route path="fees"          element={<AdminFees />} />
+                <Route path="transport"     element={<AdminTransport />} />
                 <Route path="subjects"      element={<Subjects />} />
                 <Route path="events"        element={<AuthorityEventsManagement />} />
                 <Route path="notifications" element={<Notifications />} />
@@ -143,9 +159,10 @@ function App() {
                 <Route index element={<Navigate replace to="dashboard" />} />
               </Route>
 
+                <Route path="/events/:eventId" element={<EventDetailsPage />} />
+
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
-                <Route path="/events/:eventId" element={<EventDetailsPage />} />
               </Routes>
               </Suspense>
                </BrowserRouter>

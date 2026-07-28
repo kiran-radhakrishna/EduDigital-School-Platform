@@ -13,3 +13,9 @@ analyticsRouter.get(
   authorize('ADMINISTRATOR', 'AUTHORITY'),
   asyncHandler(analyticsController.getMySchoolAnalytics),
 )
+
+analyticsRouter.get(
+  '/finance',
+  authorize('ADMINISTRATOR', 'AUTHORITY'),
+  asyncHandler(analyticsController.getMyFinanceAnalytics),
+)
